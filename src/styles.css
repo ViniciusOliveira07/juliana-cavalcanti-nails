@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -62,26 +63,36 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --radius: 0.875rem;
+
+  /* Brand tokens (Juliana Cavalcanti Esmalteria) */
+  --brand-rose-bg: oklch(0.948 0.025 12);    /* #FCE7E9 */
+  --brand-coral: oklch(0.808 0.062 11);      /* #E8A5AE */
+  --brand-wine: oklch(0.39 0.072 10);        /* #7B3F4A */
+  --brand-cream: oklch(0.99 0.005 10);       /* #FFFBFC */
+  --brand-gray: oklch(0.6 0.015 20);         /* #8A7A7D */
+  --brand-gray-light: oklch(0.953 0.008 70); /* #F1EFE8 */
+  --brand-border: oklch(0.875 0.045 8);      /* #F4C0D1 */
+
+  --background: var(--brand-rose-bg);
+  --foreground: var(--brand-wine);
+  --card: var(--brand-cream);
+  --card-foreground: var(--brand-wine);
+  --popover: var(--brand-cream);
+  --popover-foreground: var(--brand-wine);
+  --primary: var(--brand-wine);
+  --primary-foreground: var(--brand-cream);
+  --secondary: var(--brand-rose-bg);
+  --secondary-foreground: var(--brand-wine);
+  --muted: var(--brand-gray-light);
+  --muted-foreground: var(--brand-gray);
+  --accent: var(--brand-coral);
+  --accent-foreground: var(--brand-cream);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-coral);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -132,13 +143,28 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+@theme inline {
+  --color-brand-rose-bg: var(--brand-rose-bg);
+  --color-brand-coral: var(--brand-coral);
+  --color-brand-wine: var(--brand-wine);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-gray: var(--brand-gray);
+  --color-brand-gray-light: var(--brand-gray-light);
+  --color-brand-border: var(--brand-border);
+  --font-script: 'Dancing Script', cursive;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
   }
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+  html, body {
+    background-color: var(--color-brand-rose-bg);
+    color: var(--brand-wine);
+    font-family: var(--font-sans);
   }
+
+  .font-script { font-family: var(--font-script); }
 }
