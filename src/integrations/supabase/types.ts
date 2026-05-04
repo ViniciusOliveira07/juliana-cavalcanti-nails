@@ -14,13 +14,309 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          access_token: string
+          cancelled_at: string | null
+          client_id: string
+          client_notes: string | null
+          created_at: string
+          created_by: string
+          end_at: string
+          id: string
+          profile_id: string
+          service_id: string
+          start_at: string
+          status: string
+        }
+        Insert: {
+          access_token?: string
+          cancelled_at?: string | null
+          client_id: string
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string
+          end_at: string
+          id?: string
+          profile_id: string
+          service_id: string
+          start_at: string
+          status?: string
+        }
+        Update: {
+          access_token?: string
+          cancelled_at?: string | null
+          client_id?: string
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string
+          end_at?: string
+          id?: string
+          profile_id?: string
+          service_id?: string
+          start_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_events: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          recipient_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          brand_name: string | null
+          buffer_minutes: number
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_name?: string | null
+          buffer_minutes?: number
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_name?: string | null
+          buffer_minutes?: number
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          created_at: string
+          duration_minutes: number
+          id: string
+          name: string
+          price: number
+          profile_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          name: string
+          price: number
+          profile_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          name?: string
+          price?: number
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_blocks: {
+        Row: {
+          created_at: string
+          end_at: string
+          id: string
+          profile_id: string
+          reason: string | null
+          start_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          id?: string
+          profile_id: string
+          reason?: string | null
+          start_at: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          id?: string
+          profile_id?: string
+          reason?: string | null
+          start_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_blocks_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      working_hours: {
+        Row: {
+          active: boolean
+          end_time: string
+          id: string
+          profile_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          end_time?: string
+          id?: string
+          profile_id: string
+          start_time?: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          end_time?: string
+          id?: string
+          profile_id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "working_hours_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_available_slots: {
+        Args: { p_date: string; p_profile_id: string; p_service_id: string }
+        Returns: {
+          slot_end: string
+          slot_start: string
+        }[]
+      }
+      get_my_profile_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
