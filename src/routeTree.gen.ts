@@ -14,9 +14,12 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
+import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
+import { Route as AgendamentoTokenRouteImport } from './routes/agendamento.$token'
+import { Route as AgendarSucessoTokenRouteImport } from './routes/agendar.sucesso.$token'
 
 const ServicosRoute = ServicosRouteImport.update({
   id: '/servicos',
@@ -43,6 +46,11 @@ const ClientesRoute = ClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgendarRoute = AgendarRouteImport.update({
+  id: '/agendar',
+  path: '/agendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgendaRoute = AgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -58,79 +66,109 @@ const ClientesIdRoute = ClientesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ClientesRoute,
 } as any)
+const AgendamentoTokenRoute = AgendamentoTokenRouteImport.update({
+  id: '/agendamento/$token',
+  path: '/agendamento/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendarSucessoTokenRoute = AgendarSucessoTokenRouteImport.update({
+  id: '/sucesso/$token',
+  path: '/sucesso/$token',
+  getParentRoute: () => AgendarRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
+  '/agendar': typeof AgendarRouteWithChildren
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
+  '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/agendar/sucesso/$token': typeof AgendarSucessoTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
+  '/agendar': typeof AgendarRouteWithChildren
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
+  '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/agendar/sucesso/$token': typeof AgendarSucessoTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
+  '/agendar': typeof AgendarRouteWithChildren
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
+  '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/agendar/sucesso/$token': typeof AgendarSucessoTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/agenda'
+    | '/agendar'
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
     | '/login'
     | '/servicos'
+    | '/agendamento/$token'
     | '/clientes/$id'
+    | '/agendar/sucesso/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/agenda'
+    | '/agendar'
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
     | '/login'
     | '/servicos'
+    | '/agendamento/$token'
     | '/clientes/$id'
+    | '/agendar/sucesso/$token'
   id:
     | '__root__'
     | '/'
     | '/agenda'
+    | '/agendar'
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
     | '/login'
     | '/servicos'
+    | '/agendamento/$token'
     | '/clientes/$id'
+    | '/agendar/sucesso/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
+  AgendarRoute: typeof AgendarRouteWithChildren
   ClientesRoute: typeof ClientesRouteWithChildren
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   ServicosRoute: typeof ServicosRoute
+  AgendamentoTokenRoute: typeof AgendamentoTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -170,6 +208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agendar': {
+      id: '/agendar'
+      path: '/agendar'
+      fullPath: '/agendar'
+      preLoaderRoute: typeof AgendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agenda': {
       id: '/agenda'
       path: '/agenda'
@@ -191,8 +236,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesIdRouteImport
       parentRoute: typeof ClientesRoute
     }
+    '/agendamento/$token': {
+      id: '/agendamento/$token'
+      path: '/agendamento/$token'
+      fullPath: '/agendamento/$token'
+      preLoaderRoute: typeof AgendamentoTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agendar/sucesso/$token': {
+      id: '/agendar/sucesso/$token'
+      path: '/sucesso/$token'
+      fullPath: '/agendar/sucesso/$token'
+      preLoaderRoute: typeof AgendarSucessoTokenRouteImport
+      parentRoute: typeof AgendarRoute
+    }
   }
 }
+
+interface AgendarRouteChildren {
+  AgendarSucessoTokenRoute: typeof AgendarSucessoTokenRoute
+}
+
+const AgendarRouteChildren: AgendarRouteChildren = {
+  AgendarSucessoTokenRoute: AgendarSucessoTokenRoute,
+}
+
+const AgendarRouteWithChildren =
+  AgendarRoute._addFileChildren(AgendarRouteChildren)
 
 interface ClientesRouteChildren {
   ClientesIdRoute: typeof ClientesIdRoute
@@ -209,11 +279,13 @@ const ClientesRouteWithChildren = ClientesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
+  AgendarRoute: AgendarRouteWithChildren,
   ClientesRoute: ClientesRouteWithChildren,
   ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   ServicosRoute: ServicosRoute,
+  AgendamentoTokenRoute: AgendamentoTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
