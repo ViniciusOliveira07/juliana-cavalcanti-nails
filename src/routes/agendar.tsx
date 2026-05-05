@@ -154,16 +154,20 @@ function Agendar() {
       setShowErrors(true);
       if (!form.name) {
         toast.error("Por favor, digite seu nome");
-        const el = document.getElementById("client-name");
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        (el as HTMLInputElement)?.focus();
+        setTimeout(() => {
+          const el = document.getElementById("client-name");
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          (el as HTMLInputElement)?.focus();
+        }, 100);
         return;
       }
       if (!phoneOk) {
         toast.error("Por favor, digite um WhatsApp válido");
-        const el = document.getElementById("client-phone");
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        (el as HTMLInputElement)?.focus();
+        setTimeout(() => {
+          const el = document.getElementById("client-phone");
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          (el as HTMLInputElement)?.focus();
+        }, 100);
         return;
       }
       submit.mutate();
@@ -247,7 +251,7 @@ function Agendar() {
         </ul>
       </details>
 
-      <Section n={1} label="Escolha o serviço">
+      <Section id="section-service" n={1} label="Escolha o serviço">
         <div className="space-y-2">
           {services.map(s => {
             const sel = serviceId === s.id;
@@ -272,7 +276,7 @@ function Agendar() {
         </div>
       </Section>
 
-      <Section n={2} label="Escolha o dia">
+      <Section id="section-date" n={2} label="Escolha o dia">
         <div className="bg-white shadow-sm border border-brand-rose-bg rounded-3xl p-4">
           <div className="flex items-center justify-between mb-2">
             <button onClick={() => setMonth(addMonths(month, -1))} className="p-1"><ChevronLeft className="w-4 h-4 text-brand-wine" /></button>
@@ -304,7 +308,7 @@ function Agendar() {
       </Section>
 
       {date && serviceId && (
-        <Section n={3} label="Escolha o horário" badge={slots.length > 0 && slots.length <= 3 ? "Últimas vagas" : undefined}>
+        <Section id="section-slots" n={3} label="Escolha o horário" badge={slots.length > 0 && slots.length <= 3 ? "Últimas vagas" : undefined}>
           {slotsLoading ? (
             <div className="grid grid-cols-3 gap-2">{Array.from({length:6}).map((_,i) => <div key={i} className="h-12 bg-white/60 animate-pulse rounded-xl" />)}</div>
           ) : slots.length === 0 ? (
@@ -331,15 +335,17 @@ function Agendar() {
             setShowErrors(true);
             if (!serviceId) {
               toast.error("Selecione um serviço primeiro");
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              document.getElementById("section-service")?.scrollIntoView({ behavior: "smooth" });
               return;
             }
             if (!date) {
               toast.error("Escolha o dia no calendário");
+              document.getElementById("section-date")?.scrollIntoView({ behavior: "smooth" });
               return;
             }
             if (!slotIso) {
               toast.error("Selecione um horário disponível");
+              document.getElementById("section-slots")?.scrollIntoView({ behavior: "smooth" });
               return;
             }
             setStep2("form");
@@ -364,9 +370,9 @@ function PageWrap({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Section({ n, label, badge, children }: { n: number; label: string; badge?: string; children: React.ReactNode }) {
+function Section({ id, n, label, badge, children }: { id?: string; n: number; label: string; badge?: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6">
+    <section id={id} className="mt-6 scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-medium text-brand-gray">{n}. {label}</p>
         {badge && <span className="text-xs text-brand-coral">{badge}</span>}
