@@ -154,10 +154,16 @@ function Agendar() {
       setShowErrors(true);
       if (!form.name) {
         toast.error("Por favor, digite seu nome");
+        const el = document.getElementById("client-name");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        (el as HTMLInputElement)?.focus();
         return;
       }
       if (!phoneOk) {
         toast.error("Por favor, digite um WhatsApp válido");
+        const el = document.getElementById("client-phone");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        (el as HTMLInputElement)?.focus();
         return;
       }
       submit.mutate();
@@ -186,12 +192,13 @@ function Agendar() {
         <div className="space-y-4 pb-8">
           <div>
             <Label className="text-brand-wine/80 ml-1 mb-1 block">Qual o seu nome?</Label>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} 
+            <Input id="client-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} 
               className={`h-14 rounded-2xl bg-white focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4 ${showErrors && !form.name ? "border-red-500 bg-red-50" : "border-brand-rose-bg"}`} placeholder="Ex: Maria Silva" autoFocus />
           </div>
           <div>
             <Label className="text-brand-wine/80 ml-1 mb-1 block">Seu WhatsApp</Label>
             <IMaskInput
+              id="client-phone"
               mask="+55 (00) 00000-0000"
               placeholder="+55 (11) 99999-9999"
               value={form.phone}

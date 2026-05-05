@@ -37,7 +37,16 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
       if (!profile || !serviceId || !slotIso) throw new Error("Dados incompletos");
       let cid = clientId;
       if (!cid) {
-        if (!newClient.name || !newClient.phone) throw new Error("Preencha nome e telefone");
+        if (!newClient.name) {
+          toast.error("Por favor, digite o nome");
+          document.getElementById("modal-name")?.focus();
+          return;
+        }
+        if (!newClient.phone) {
+          toast.error("Por favor, digite o WhatsApp");
+          document.getElementById("modal-phone")?.focus();
+          return;
+        }
         const { data, error } = await supabase.from("clients").upsert(
           { profile_id: profile.id, name: newClient.name, phone: newClient.phone },
           { onConflict: "profile_id,phone" }
@@ -92,8 +101,9 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
             <div className="border-t border-brand-border pt-4 space-y-3">
               <p className="text-xs text-brand-gray uppercase ml-1">Ou cadastrar nova cliente</p>
               <div className="grid grid-cols-1 gap-2">
-                <Input placeholder="Nome completo" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="h-11 rounded-xl" />
+                <Input id="modal-name" placeholder="Nome completo" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="h-11 rounded-xl" />
                 <IMaskInput
+                  id="modal-phone"
                   mask="+55 (00) 00000-0000"
                   placeholder="+55 (11) 99999-9999"
                   value={newClient.phone}
