@@ -31,6 +31,7 @@ function Agendar() {
   const [month, setMonth] = useState(new Date());
   const [step2, setStep2] = useState<"booking" | "form">("booking");
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
+  const [showErrors, setShowErrors] = useState(false);
 
   const selectedService = services.find(s => s.id === serviceId);
   const { data: slots = [], isPlaceholderData: slotsLoading } = useAvailableSlots(profile, selectedService, date ?? undefined, hours);
@@ -67,29 +68,66 @@ function Agendar() {
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (!profile || !serviceId || !slotIso) throw new Error("Dados incompletos");
+      if (!profile || !serviceId || !slotIso) throw new Error("Dados incompletos para o agendamento");
       const svc = services.find(s => s.id === serviceId)!;
-      // upsert client
-      const { data: client, error: ce } = await supabase.from("clients").upsert(
-        { profile_id: profile.id, name: form.name, phone: form.phone },
-        { onConflict: "profile_id,phone" }
-      ).select("id").single();
-      if (ce) throw ce;
+      
+      // 1. Verificar se o cliente já existe pelo telefone e perfil
+      const { data: existingClient } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("phone", form.phone)
+        .maybeSingle();
+
+      let clientId: string;
+
+      if (existingClient) {
+        clientId = existingClient.id;
+        // Opcional: Atualizar o nome se o cliente quiser
+        await supabase.from("clients").update({ name: form.name }).eq("id", clientId);
+      } else {
+        // 2. Se não existir, registrar novo cliente
+        const { data: newClient, error: ce } = await supabase.from("clients").insert({
+          profile_id: profile.id,
+          name: form.name,
+          phone: form.phone
+        }).select("id").single();
+        
+        if (ce) {
+          if (ce.code === "23505") throw new Error("Este número de telefone já está cadastrado.");
+          throw new Error("Erro ao salvar seus dados. Por favor, tente novamente.");
+        }
+        clientId = newClient.id;
+      }
+
       const start = new Date(slotIso);
       const end = new Date(start.getTime() + svc.duration_minutes * 60_000);
+      
       const { data: appt, error: ae } = await supabase.from("appointments").insert({
-        profile_id: profile.id, client_id: client.id, service_id: serviceId,
-        start_at: start.toISOString(), end_at: end.toISOString(),
-        client_notes: form.notes || null, created_by: "client",
+        profile_id: profile.id, 
+        client_id: clientId, 
+        service_id: serviceId,
+        start_at: start.toISOString(), 
+        end_at: end.toISOString(),
+        client_notes: form.notes || null, 
+        created_by: "client",
       }).select("access_token").single();
-      if (ae) throw ae;
+      
+      if (ae) {
+        console.error("Erro no agendamento:", ae);
+        throw new Error("Não foi possível confirmar o agendamento. O horário pode ter sido preenchido agora pouco.");
+      }
+      
       return appt.access_token;
     },
     onSuccess: (token) => {
       qc.invalidateQueries({ queryKey: ["slots"] });
       navigate({ to: "/agendar/sucesso/$token", params: { token } });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      const msg = e.message || "Ocorreu um erro inesperado.";
+      toast.error(msg);
+    },
   });
 
   const canContinue = serviceId && date && slotIso;
@@ -97,6 +135,20 @@ function Agendar() {
 
   if (step2 === "form") {
     const svc = services.find(s => s.id === serviceId);
+    
+    const handleConfirm = () => {
+      setShowErrors(true);
+      if (!form.name) {
+        toast.error("Por favor, digite seu nome");
+        return;
+      }
+      if (!phoneOk) {
+        toast.error("Por favor, digite um WhatsApp válido");
+        return;
+      }
+      submit.mutate();
+    };
+
     return (
       <PageWrap>
         <BrandHeader />
@@ -121,7 +173,7 @@ function Agendar() {
           <div>
             <Label className="text-brand-wine/80 ml-1 mb-1 block">Qual o seu nome?</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} 
-              className="h-14 rounded-2xl bg-white border-brand-rose-bg focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4" placeholder="Ex: Maria Silva" autoFocus />
+              className={`h-14 rounded-2xl bg-white focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4 ${showErrors && !form.name ? "border-red-500 bg-red-50" : "border-brand-rose-bg"}`} placeholder="Ex: Maria Silva" autoFocus />
           </div>
           <div>
             <Label className="text-brand-wine/80 ml-1 mb-1 block">Seu WhatsApp</Label>
@@ -131,7 +183,7 @@ function Agendar() {
               value={form.phone}
               unmask={false}
               onAccept={(value) => setForm({ ...form, phone: value as string })}
-              className="flex h-14 w-full rounded-2xl border border-brand-rose-bg bg-white px-4 text-base shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:border-brand-wine focus-visible:ring-2 focus-visible:ring-brand-wine/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`flex h-14 w-full rounded-2xl border bg-white px-4 text-base shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:border-brand-wine focus-visible:ring-2 focus-visible:ring-brand-wine/20 disabled:cursor-not-allowed disabled:opacity-50 ${showErrors && !phoneOk ? "border-red-500 bg-red-50" : "border-brand-rose-bg"}`}
             />
           </div>
           <div>
@@ -143,7 +195,7 @@ function Agendar() {
 
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-brand-rose-bg via-brand-rose-bg/90 to-transparent pt-12 z-10 pointer-events-none flex justify-center">
           <div className="w-full max-w-[480px] px-4 pointer-events-auto">
-            <Button onClick={() => submit.mutate()} disabled={!form.name || !phoneOk || submit.isPending}
+            <Button onClick={handleConfirm} disabled={submit.isPending}
               className="w-full bg-brand-wine text-brand-cream h-14 rounded-2xl text-base font-medium shadow-xl disabled:opacity-50 disabled:shadow-none transition-all hover:scale-[1.02]">
               {submit.isPending ? "Confirmando..." : "Confirmar agendamento"}
             </Button>
@@ -254,8 +306,25 @@ function Agendar() {
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-brand-rose-bg via-brand-rose-bg/90 to-transparent pt-12 z-10 pointer-events-none flex justify-center">
         <div className="w-full max-w-[480px] px-4 pointer-events-auto">
-          <Button disabled={!canContinue} onClick={() => setStep2("form")}
-            className="w-full bg-brand-wine text-brand-cream h-14 rounded-2xl text-base font-medium shadow-xl disabled:opacity-50 disabled:shadow-none transition-all hover:scale-[1.02]">
+          <Button onClick={() => {
+            setShowErrors(true);
+            if (!serviceId) {
+              toast.error("Selecione um serviço primeiro");
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              return;
+            }
+            if (!date) {
+              toast.error("Escolha o dia no calendário");
+              return;
+            }
+            if (!slotIso) {
+              toast.error("Selecione um horário disponível");
+              return;
+            }
+            setStep2("form");
+            setShowErrors(false);
+          }}
+            className="w-full bg-brand-wine text-brand-cream h-14 rounded-2xl text-base font-medium shadow-xl transition-all hover:scale-[1.02]">
             Continuar
           </Button>
         </div>
