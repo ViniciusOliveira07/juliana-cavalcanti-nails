@@ -370,14 +370,14 @@ function PageWrap({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Section({ id, n, label, badge, children }: { id?: string; n: number; label: string; badge?: string; children: React.ReactNode }) {
+function Section(props: { id?: string; n: number; label: string; badge?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="mt-6 scroll-mt-20">
+    <section id={props.id} className="mt-6 scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-medium text-brand-gray">{n}. {label}</p>
-        {badge && <span className="text-xs text-brand-coral">{badge}</span>}
+        <p className="text-sm font-medium text-brand-gray">{props.n}. {props.label}</p>
+        {props.badge && <span className="text-xs text-brand-coral">{props.badge}</span>}
       </div>
-      {children}
+      {props.children}
     </section>
   );
 }
