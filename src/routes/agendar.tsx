@@ -114,6 +114,21 @@ function Agendar() {
       
       if (ae) {
         console.error("Erro no agendamento:", ae);
+        
+        // Se o erro for de conflito, pode ser que o agendamento já tenha sido criado (ex: duplo clique ou erro de rede anterior)
+        // Vamos tentar recuperar o token do agendamento que já existe para o usuário não ver erro
+        const { data: existingAppt } = await supabase
+          .from("appointments")
+          .select("access_token")
+          .eq("profile_id", profile.id)
+          .eq("client_id", clientId)
+          .eq("start_at", start.toISOString())
+          .maybeSingle();
+
+        if (existingAppt) {
+          return existingAppt.access_token;
+        }
+
         throw new Error(`Não foi possível confirmar: ${ae.message}`);
       }
       
@@ -121,6 +136,7 @@ function Agendar() {
     },
     onSuccess: (token) => {
       qc.invalidateQueries({ queryKey: ["slots"] });
+      qc.invalidateQueries({ queryKey: ["appointments"] });
       navigate({ to: "/agendar/sucesso/$token", params: { token } });
     },
     onError: (e: any) => {
