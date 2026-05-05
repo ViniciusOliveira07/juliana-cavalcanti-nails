@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { fmtDate, fmtTime, fmtMoney, fmtDuration, capitalize } from "@/lib/format";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/agendar/sucesso/$token")({ component: Sucesso });
+export const Route = createFileRoute("/agendado/$token")({ component: Sucesso });
 
 function Sucesso() {
   const { token } = Route.useParams();

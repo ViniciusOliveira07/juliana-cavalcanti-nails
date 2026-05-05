@@ -136,7 +136,7 @@ function Agendar() {
     onSuccess: (token) => {
       qc.invalidateQueries({ queryKey: ["slots"] });
       qc.invalidateQueries({ queryKey: ["appointments"] });
-      navigate({ to: "/agendar/sucesso/$token", params: { token } });
+      navigate({ to: "/agendado/$token", params: { token } });
     },
     onError: (e: any) => {
       const msg = e.message || "Ocorreu um erro inesperado ao processar seu agendamento.";
