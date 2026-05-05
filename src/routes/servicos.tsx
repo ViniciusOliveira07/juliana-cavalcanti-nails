@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, ArrowUp, ArrowDown } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,35 @@ function Servicos() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
 
+  const reorder = useMutation({
+    mutationFn: async (newOrder: any[]) => {
+      // Base date far in the past to avoid colliding with future created items
+      const baseDate = new Date("2020-01-01T00:00:00Z").getTime();
+      const promises = newOrder.map((s, i) => {
+        const newTime = new Date(baseDate + i * 1000).toISOString();
+        return supabase.from("services").update({ created_at: newTime }).eq("id", s.id);
+      });
+      await Promise.all(promises);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
+  });
+
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...services];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    qc.setQueryData(["services", false], newOrder); // optimistic update
+    reorder.mutate(newOrder);
+  };
+
+  const moveDown = (index: number) => {
+    if (index === services.length - 1) return;
+    const newOrder = [...services];
+    [newOrder[index + 1], newOrder[index]] = [newOrder[index], newOrder[index + 1]];
+    qc.setQueryData(["services", false], newOrder); // optimistic update
+    reorder.mutate(newOrder);
+  };
+
   return (
     <AppShell>
       <header className="pt-6 pb-3 flex items-center justify-between">
@@ -59,8 +88,16 @@ function Servicos() {
       </header>
 
       <ul className="space-y-2">
-        {services.map(s => (
+        {services.map((s, i) => (
           <li key={s.id} className="bg-brand-cream rounded-xl p-3 flex items-center gap-3">
+            <div className="flex flex-col gap-1">
+              <button onClick={() => moveUp(i)} disabled={i === 0 || reorder.isPending} className="p-1 disabled:opacity-30 hover:bg-brand-rose-bg rounded text-brand-wine/70">
+                <ArrowUp className="w-4 h-4" />
+              </button>
+              <button onClick={() => moveDown(i)} disabled={i === services.length - 1 || reorder.isPending} className="p-1 disabled:opacity-30 hover:bg-brand-rose-bg rounded text-brand-wine/70">
+                <ArrowDown className="w-4 h-4" />
+              </button>
+            </div>
             <button onClick={() => { setEditing(s); setOpen(true); }} className="flex-1 text-left">
               <p className="text-sm font-medium text-brand-wine">{s.name}</p>
               <p className="text-xs text-brand-gray">{fmtDuration(s.duration_minutes)} · {fmtMoney(s.price)}</p>

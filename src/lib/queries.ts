@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfDay, endOfDay, addDays, differenceInMinutes } from "date-fns";
 import { getMyProfile, getPublicProfile } from "@/lib/db";
@@ -70,20 +70,79 @@ export const useWorkingHours = () =>
     },
   });
 
-export const useAvailableSlots = (profileId: string | undefined, serviceId: string | undefined, date: Date | undefined) =>
+export const useAvailableSlots = (
+  profile: any,
+  service: any,
+  date: Date | undefined,
+  allWorkingHours: any[]
+) =>
   useQuery({
-    enabled: !!profileId && !!serviceId && !!date,
-    queryKey: ["slots", profileId, serviceId, date?.toDateString()],
+    enabled: !!profile?.id && !!service?.id && !!date,
+    queryKey: ["slots", profile?.id, service?.id, date?.toDateString()],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_available_slots", {
-        p_profile_id: profileId!,
-        p_service_id: serviceId!,
-        p_date: date!.toISOString().slice(0, 10),
-      });
-      if (error) throw error;
-      return data ?? [];
+      // 1. Horário de funcionamento do dia selecionado
+      const whData = allWorkingHours.find(h => h.weekday === date!.getDay());
+      if (!whData || !whData.active) return [];
+
+      // 2. Agendamentos e bloqueios do dia
+      const startOfDayStr = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), 0, 0, 0).toISOString();
+      const endOfDayStr = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), 23, 59, 59).toISOString();
+
+      const [{ data: appts }, { data: blocks }] = await Promise.all([
+        supabase.from("appointments")
+          .select("start_at, end_at")
+          .eq("profile_id", profile.id)
+          .neq("status", "cancelled")
+          .gte("start_at", startOfDayStr)
+          .lte("start_at", endOfDayStr),
+        supabase.from("time_blocks")
+          .select("start_at, end_at")
+          .eq("profile_id", profile.id)
+          .gte("start_at", startOfDayStr)
+          .lte("start_at", endOfDayStr)
+      ]);
+
+      const bufferMs = (profile.buffer_minutes || 0) * 60000;
+      
+      const busy = [
+        ...(appts || []).map(a => ({ 
+          s: new Date(a.start_at).getTime(), 
+          e: new Date(a.end_at).getTime() + bufferMs 
+        })),
+        ...(blocks || []).map(b => ({ 
+          s: new Date(b.start_at).getTime(), 
+          e: new Date(b.end_at).getTime() 
+        }))
+      ];
+
+      // 3. Gerar horários a cada 30 min
+      const [sh, sm] = whData.start_time.split(":").map(Number);
+      const [eh, em] = whData.end_time.split(":").map(Number);
+      const cursor = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), sh, sm, 0);
+      const endLimit = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), eh, em, 0).getTime();
+      const durMs = service.duration_minutes * 60000;
+      const nowMs = Date.now();
+      
+      const slots: { slot_start: string, slot_end: string }[] = [];
+
+      while (cursor.getTime() + durMs <= endLimit) {
+        const startMs = cursor.getTime();
+        const endMs = startMs + durMs;
+        const totalNeededEndMs = endMs + bufferMs;
+
+        if (startMs > nowMs) {
+          const collision = busy.some(b => startMs < b.e && totalNeededEndMs > b.s);
+          if (!collision) {
+            slots.push({ slot_start: new Date(startMs).toISOString(), slot_end: new Date(endMs).toISOString() });
+          }
+        }
+        cursor.setMinutes(cursor.getMinutes() + 30);
+      }
+
+      return slots;
     },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
 export const minutesUntil = (iso: string) => differenceInMinutes(new Date(iso), new Date());

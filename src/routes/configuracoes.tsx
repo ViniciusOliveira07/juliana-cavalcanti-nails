@@ -19,6 +19,38 @@ export const Route = createFileRoute("/configuracoes")({
   component: () => <ProtectedRoute><Config /></ProtectedRoute>,
 });
 
+function WorkingHourRow({ h, updateHour }: { h: any, updateHour: any }) {
+  const [start, setStart] = useState(h.start_time.slice(0, 5));
+  const [end, setEnd] = useState(h.end_time.slice(0, 5));
+
+  return (
+    <li className="bg-brand-cream rounded-xl p-3 flex items-center gap-2">
+      <span className="text-sm text-brand-wine flex-1">{DAYS[h.weekday]}</span>
+      {h.active ? (
+        <>
+          <Input 
+            type="time" 
+            value={start} 
+            onChange={(e) => setStart(e.target.value)} 
+            onBlur={() => updateHour.mutate({ ...h, start_time: start })}
+            className="w-24 h-8 text-sm" 
+          />
+          <span className="text-brand-gray text-sm">–</span>
+          <Input 
+            type="time" 
+            value={end} 
+            onChange={(e) => setEnd(e.target.value)} 
+            onBlur={() => updateHour.mutate({ ...h, end_time: end })}
+            className="w-24 h-8 text-sm" 
+          />
+        </>
+      ) : <span className="italic text-brand-gray text-sm">Fechado</span>}
+      <Switch checked={h.active} onCheckedChange={(c) => updateHour.mutate({ ...h, active: c })} />
+    </li>
+  );
+}
+
+
 function Config() {
   const { signOut } = useAuth();
   const { data: hours = [] } = useWorkingHours();
@@ -57,17 +89,7 @@ function Config() {
       <h2 className="text-[11px] uppercase tracking-wider text-brand-gray font-medium mt-4 mb-2">Horário de expediente</h2>
       <ul className="space-y-1.5">
         {hours.map(h => (
-          <li key={h.id} className="bg-brand-cream rounded-xl p-3 flex items-center gap-2">
-            <span className="text-sm text-brand-wine flex-1">{DAYS[h.weekday]}</span>
-            {h.active ? (
-              <>
-                <Input type="time" value={h.start_time.slice(0,5)} onChange={(e) => updateHour.mutate({ ...h, start_time: e.target.value })} className="w-24 h-8 text-sm" />
-                <span className="text-brand-gray text-sm">–</span>
-                <Input type="time" value={h.end_time.slice(0,5)} onChange={(e) => updateHour.mutate({ ...h, end_time: e.target.value })} className="w-24 h-8 text-sm" />
-              </>
-            ) : <span className="italic text-brand-gray text-sm">Fechado</span>}
-            <Switch checked={h.active} onCheckedChange={(c) => updateHour.mutate({ ...h, active: c })} />
-          </li>
+          <WorkingHourRow key={h.id} h={h} updateHour={updateHour} />
         ))}
       </ul>
 
@@ -87,7 +109,7 @@ function Config() {
         <div className="bg-brand-cream rounded-xl p-3">
           <p className="text-sm text-brand-wine mb-2">Buffer entre atendimentos</p>
           <div className="flex gap-2">
-            {[10,15,20,30].map(m => (
+            {[0,10,15,20,30].map(m => (
               <button key={m} onClick={() => updateBuffer.mutate(m)}
                 className={`flex-1 py-2 rounded-lg text-sm ${profile?.buffer_minutes === m ? "bg-brand-wine text-brand-cream" : "bg-brand-rose-bg text-brand-wine"}`}>
                 {m}min

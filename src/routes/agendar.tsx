@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Calendar, Sparkles } from "lucide-react";
 import { addDays, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isBefore, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useServices, useWorkingHours, useAvailableSlots, usePublicProfile } from "@/lib/queries";
 import { fmtMoney, fmtDuration, fmtTime, fmtDate, capitalize } from "@/lib/format";
 import { toast } from "sonner";
+import { IMaskInput } from "react-imask";
 
 export const Route = createFileRoute("/agendar")({ component: Agendar });
 
@@ -31,7 +32,8 @@ function Agendar() {
   const [step2, setStep2] = useState<"booking" | "form">("booking");
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
 
-  const { data: slots = [], isLoading: slotsLoading } = useAvailableSlots(profile?.id, serviceId ?? undefined, date ?? undefined);
+  const selectedService = services.find(s => s.id === serviceId);
+  const { data: slots = [], isPlaceholderData: slotsLoading } = useAvailableSlots(profile, selectedService, date ?? undefined, hours);
 
   const calendarDays = useMemo(() => eachDayOfInterval({
     start: startOfWeek(startOfMonth(month)),
@@ -52,6 +54,15 @@ function Agendar() {
         ? `${day}: ${h.start_time.slice(0,5)} às ${h.end_time.slice(0,5)}`
         : `${day}: fechado`;
     });
+  }, [hours]);
+
+  const todayHoursStr = useMemo(() => {
+    const todayDayOfWeek = new Date().getDay();
+    const todayH = hours.find(h => h.weekday === todayDayOfWeek);
+    if (todayH?.active) {
+      return `Hoje: ${todayH.start_time.slice(0,5)} às ${todayH.end_time.slice(0,5)}`;
+    }
+    return "Hoje: Fechado";
   }, [hours]);
 
   const submit = useMutation({
@@ -82,26 +93,61 @@ function Agendar() {
   });
 
   const canContinue = serviceId && date && slotIso;
-  const phoneOk = /^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/.test(form.phone.replace(/\s/g, ""));
+  const phoneOk = /^\+55 \(\d{2}\) \d{5}-\d{4}$/.test(form.phone);
 
   if (step2 === "form") {
     const svc = services.find(s => s.id === serviceId);
     return (
       <PageWrap>
         <BrandHeader />
-        <button onClick={() => setStep2("booking")} className="text-sm text-brand-wine inline-flex items-center"><ChevronLeft className="w-4 h-4" /> Voltar</button>
-        <div className="bg-brand-rose-bg rounded-2xl p-4 mt-3">
-          <p className="text-sm font-medium text-brand-wine">{svc?.name} · {fmtDuration(svc?.duration_minutes ?? 0)} · {fmtMoney(svc?.price ?? 0)}</p>
-          <p className="text-sm text-brand-wine mt-1">{capitalize(fmtDate(slotIso!))} às {fmtTime(slotIso!)}</p>
+        
+        <button onClick={() => setStep2("booking")} className="text-sm font-medium text-brand-wine inline-flex items-center gap-1 mb-4 mt-2">
+          <ChevronLeft className="w-4 h-4" /> Voltar
+        </button>
+
+        <div className="bg-brand-cream rounded-2xl p-4 mb-6 border border-brand-wine/10 shadow-sm">
+          <div className="mb-3 pb-3 border-b border-brand-wine/10">
+            <p className="text-[11px] font-semibold text-brand-wine/60 uppercase tracking-wider mb-1">Serviço</p>
+            <p className="text-base font-medium text-brand-wine">{svc?.name}</p>
+            <p className="text-sm text-brand-gray mt-0.5">{fmtDuration(svc?.duration_minutes ?? 0)} · {fmtMoney(svc?.price ?? 0)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-brand-wine/60 uppercase tracking-wider mb-1">Data e Hora</p>
+            <p className="text-base font-medium text-brand-wine">{capitalize(fmtDate(slotIso!))} às {fmtTime(slotIso!)}</p>
+          </div>
         </div>
-        <div className="space-y-4 mt-4">
-          <div><Label>Seu nome</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="h-12" autoFocus /></div>
-          <div><Label>Telefone</Label><Input value={form.phone} placeholder="(11) 99999-9999" onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-12" /></div>
-          <div><Label>Alguma observação? (opcional)</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-          <Button onClick={() => submit.mutate()} disabled={!form.name || !phoneOk || submit.isPending}
-            className="w-full bg-brand-wine text-brand-cream h-12 text-base">
-            {submit.isPending ? "Confirmando..." : "Confirmar agendamento"}
-          </Button>
+
+        <div className="space-y-4 pb-8">
+          <div>
+            <Label className="text-brand-wine/80 ml-1 mb-1 block">Qual o seu nome?</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} 
+              className="h-14 rounded-2xl bg-white border-brand-rose-bg focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4" placeholder="Ex: Maria Silva" autoFocus />
+          </div>
+          <div>
+            <Label className="text-brand-wine/80 ml-1 mb-1 block">Seu WhatsApp</Label>
+            <IMaskInput
+              mask="+55 (00) 00000-0000"
+              placeholder="+55 (11) 99999-9999"
+              value={form.phone}
+              unmask={false}
+              onAccept={(value) => setForm({ ...form, phone: value as string })}
+              className="flex h-14 w-full rounded-2xl border border-brand-rose-bg bg-white px-4 text-base shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:border-brand-wine focus-visible:ring-2 focus-visible:ring-brand-wine/20 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          <div>
+            <Label className="text-brand-wine/80 ml-1 mb-1 block">Alguma observação? <span className="opacity-60 text-xs font-normal">(opcional)</span></Label>
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} 
+              className="min-h-[100px] rounded-2xl bg-white border-brand-rose-bg focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm p-4 text-base" placeholder="Ex: Preciso sair até as 15h..." />
+          </div>
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-brand-rose-bg via-brand-rose-bg/90 to-transparent pt-12 z-10 pointer-events-none flex justify-center">
+          <div className="w-full max-w-[480px] px-4 pointer-events-auto">
+            <Button onClick={() => submit.mutate()} disabled={!form.name || !phoneOk || submit.isPending}
+              className="w-full bg-brand-wine text-brand-cream h-14 rounded-2xl text-base font-medium shadow-xl disabled:opacity-50 disabled:shadow-none transition-all hover:scale-[1.02]">
+              {submit.isPending ? "Confirmando..." : "Confirmar agendamento"}
+            </Button>
+          </div>
         </div>
       </PageWrap>
     );
@@ -110,12 +156,23 @@ function Agendar() {
   return (
     <PageWrap>
       <BrandHeader />
-      <div className="bg-brand-rose-bg rounded-2xl p-4 mt-2">
-        <p className="text-sm font-medium text-brand-wine flex items-center gap-2"><Clock className="w-4 h-4" /> Horário de atendimento</p>
-        <ul className="text-sm text-brand-wine/90 mt-2 space-y-0.5">
+      <div className="text-center mt-2 mb-6">
+        <h2 className="text-lg font-medium text-brand-wine">Agende seu momento</h2>
+        <p className="text-sm text-brand-gray mt-1">Selecione o serviço e horário desejado</p>
+      </div>
+
+      <details className="bg-white rounded-2xl p-4 mt-2 group border border-brand-rose-bg shadow-sm [&_summary::-webkit-details-marker]:hidden">
+        <summary className="text-sm font-medium text-brand-wine flex items-center justify-between cursor-pointer list-none focus:outline-none">
+          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-brand-wine/70" /> <span className="truncate">{todayHoursStr}</span></div>
+          <div className="flex items-center gap-1 text-[11px] text-brand-wine/60 font-normal ml-2">
+            <span>Ver todos</span>
+            <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
+          </div>
+        </summary>
+        <ul className="text-sm text-brand-wine/70 mt-3 space-y-1.5 pt-3 border-t border-brand-rose-bg">
           {hoursLines.map((l, i) => <li key={i}>{l}</li>)}
         </ul>
-      </div>
+      </details>
 
       <Section n={1} label="Escolha o serviço">
         <div className="space-y-2">
@@ -123,12 +180,19 @@ function Agendar() {
             const sel = serviceId === s.id;
             return (
               <button key={s.id} onClick={() => setServiceId(s.id)}
-                className={`w-full p-4 rounded-xl border text-left flex justify-between ${sel ? "border-brand-coral border-[1.5px] bg-brand-rose-bg" : "border-brand-border bg-brand-cream"}`}>
-                <div>
-                  <p className="text-base font-medium text-brand-wine">{s.name}</p>
-                  <p className="text-sm text-brand-gray">{fmtDuration(s.duration_minutes)}</p>
+                className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all duration-300 ${
+                  sel 
+                  ? "bg-brand-rose-bg border-brand-wine shadow-md ring-1 ring-brand-wine/10 scale-[1.02]" 
+                  : "bg-white border-brand-rose-bg hover:border-brand-wine/30 hover:shadow-sm"
+                }`}>
+                <div className="flex-1">
+                  <p className={`text-base font-medium ${sel ? "text-brand-wine" : "text-brand-wine/90"}`}>{s.name}</p>
+                  <p className="text-sm text-brand-gray mt-0.5">{fmtDuration(s.duration_minutes)}</p>
                 </div>
-                <p className="text-base font-medium text-brand-wine">{fmtMoney(s.price)}</p>
+                <div className="text-right">
+                  <p className={`text-base font-medium ${sel ? "text-brand-wine" : "text-brand-wine/80"}`}>{fmtMoney(s.price)}</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-semibold mt-1 transition-opacity ${sel ? "text-brand-wine opacity-100" : "text-transparent opacity-0"}`}>Selecionado</p>
+                </div>
               </button>
             );
           })}
@@ -136,7 +200,7 @@ function Agendar() {
       </Section>
 
       <Section n={2} label="Escolha o dia">
-        <div className="bg-brand-cream rounded-2xl p-3">
+        <div className="bg-white shadow-sm border border-brand-rose-bg rounded-3xl p-4">
           <div className="flex items-center justify-between mb-2">
             <button onClick={() => setMonth(addMonths(month, -1))} className="p-1"><ChevronLeft className="w-4 h-4 text-brand-wine" /></button>
             <p className="text-sm font-medium text-brand-wine">{capitalize(format(month, "MMMM yyyy", { locale: ptBR }))}</p>
@@ -154,9 +218,9 @@ function Agendar() {
               const isToday = isSameDay(d, today);
               return (
                 <button key={d.toISOString()} disabled={disabled} onClick={() => { setDate(d); setSlotIso(null); }}
-                  className={`aspect-square text-sm rounded-lg flex flex-col items-center justify-center
-                    ${disabled ? "text-brand-gray/40" : ""}
-                    ${sel ? "bg-brand-wine text-brand-cream font-medium" : !disabled ? "bg-brand-cream border border-brand-border text-brand-wine hover:bg-brand-rose-bg" : ""}`}>
+                  className={`aspect-square text-sm rounded-xl flex flex-col items-center justify-center transition-all
+                    ${disabled ? "text-brand-gray/30" : ""}
+                    ${sel ? "bg-brand-wine text-brand-cream font-medium shadow-md scale-105" : !disabled ? "bg-brand-rose-bg/50 border border-transparent text-brand-wine hover:bg-brand-rose-bg hover:border-brand-wine/20" : ""}`}>
                   {format(d, "d")}
                   {isToday && !sel && <span className="w-1 h-1 rounded-full bg-brand-coral" />}
                 </button>
@@ -169,16 +233,16 @@ function Agendar() {
       {date && serviceId && (
         <Section n={3} label="Escolha o horário" badge={slots.length > 0 && slots.length <= 3 ? "Últimas vagas" : undefined}>
           {slotsLoading ? (
-            <div className="grid grid-cols-3 gap-2">{Array.from({length:6}).map((_,i) => <div key={i} className="h-12 bg-brand-cream/60 animate-pulse rounded-lg" />)}</div>
+            <div className="grid grid-cols-3 gap-2">{Array.from({length:6}).map((_,i) => <div key={i} className="h-12 bg-white/60 animate-pulse rounded-xl" />)}</div>
           ) : slots.length === 0 ? (
-            <div className="bg-brand-cream rounded-xl p-4 text-center text-sm text-brand-gray">Sem horários disponíveis neste dia. Tente outra data 💅</div>
+            <div className="bg-white rounded-2xl p-6 text-center text-sm text-brand-gray shadow-sm border border-brand-rose-bg">Sem horários disponíveis neste dia. Tente outra data 💅</div>
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {slots.map((s: any) => {
                 const sel = s.slot_start === slotIso;
                 return (
                   <button key={s.slot_start} onClick={() => setSlotIso(s.slot_start)}
-                    className={`py-3 rounded-lg text-sm ${sel ? "bg-brand-wine text-brand-cream font-medium" : "bg-brand-cream border border-brand-border text-brand-wine"}`}>
+                    className={`py-3 rounded-xl text-sm transition-all ${sel ? "bg-brand-wine text-brand-cream font-medium shadow-md scale-105" : "bg-white border border-brand-rose-bg text-brand-wine hover:border-brand-wine/30"}`}>
                     {fmtTime(s.slot_start)}
                   </button>
                 );
@@ -188,11 +252,13 @@ function Agendar() {
         </Section>
       )}
 
-      <div className="sticky bottom-4 mt-6">
-        <Button disabled={!canContinue} onClick={() => setStep2("form")}
-          className="w-full bg-brand-wine text-brand-cream h-12 text-base disabled:opacity-50">
-          Continuar
-        </Button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-brand-rose-bg via-brand-rose-bg/90 to-transparent pt-12 z-10 pointer-events-none flex justify-center">
+        <div className="w-full max-w-[480px] px-4 pointer-events-auto">
+          <Button disabled={!canContinue} onClick={() => setStep2("form")}
+            className="w-full bg-brand-wine text-brand-cream h-14 rounded-2xl text-base font-medium shadow-xl disabled:opacity-50 disabled:shadow-none transition-all hover:scale-[1.02]">
+            Continuar
+          </Button>
+        </div>
       </div>
     </PageWrap>
   );
@@ -200,11 +266,9 @@ function Agendar() {
 
 function PageWrap({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-brand-rose-bg pb-8">
-      <div className="mx-auto max-w-[480px] px-4">
-        <div className="bg-brand-cream rounded-3xl p-5 mt-4">
-          {children}
-        </div>
+    <div className="min-h-screen bg-brand-rose-bg pb-32">
+      <div className="mx-auto max-w-[480px] p-4">
+        {children}
       </div>
     </div>
   );

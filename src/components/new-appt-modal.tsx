@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useClients, useServices, useProfile, useAvailableSlots } from "@/lib/queries";
-import { fmtMoney, fmtDuration, fmtTime } from "@/lib/format";
+import { fmtMoney, fmtDuration, fmtTime, fmtPhone } from "@/lib/format";
 import { addDays, format } from "date-fns";
 import { toast } from "sonner";
+import { IMaskInput } from "react-imask";
 
 export function NewApptModal({ initialDate, initialHour, onClose }: { initialDate: Date; initialHour?: number; onClose: () => void }) {
   const qc = useQueryClient();
@@ -76,14 +77,21 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                 <button key={c.id} onClick={() => { setClientId(c.id); setStep(2); }}
                   className="w-full text-left p-2.5 rounded-lg hover:bg-brand-rose-bg">
                   <p className="text-sm font-medium text-brand-wine">{c.name}</p>
-                  <p className="text-xs text-brand-gray">{c.phone}</p>
+                  <p className="text-xs text-brand-gray">{fmtPhone(c.phone)}</p>
                 </button>
               ))}
             </div>
             <div className="border-t border-brand-border pt-3 space-y-2">
               <p className="text-xs text-brand-gray uppercase">Ou nova cliente</p>
               <Input placeholder="Nome" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />
-              <Input placeholder="Telefone" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} />
+              <IMaskInput
+                mask="+55 (00) 00000-0000"
+                placeholder="+55 (11) 99999-9999"
+                value={newClient.phone}
+                unmask={false}
+                onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              />
               <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine text-brand-cream">Continuar</Button>
             </div>
           </div>
