@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Plus, Pencil } from "lucide-react";
+import { Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/protected-route";
 import { AppShell } from "@/components/app-shell";
 import { useClients, useProfile } from "@/lib/queries";
@@ -24,6 +24,7 @@ function Clientes() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ id: "", name: "", phone: "" });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const filtered = clients.filter(c =>
     c.name.toLowerCase().includes(q.toLowerCase()) || c.phone.includes(q));
@@ -43,6 +44,22 @@ function Clientes() {
       toast.success(form.id ? "Cliente atualizada" : "Cliente cadastrada");
       qc.invalidateQueries({ queryKey: ["clients"] });
       setOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+      if (error) {
+        if (error.code === "23503") throw new Error("Não é possível excluir uma cliente que já possui agendamentos no histórico.");
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Cliente excluída");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      setDeleteId(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -75,6 +92,9 @@ function Clientes() {
             <button onClick={() => { setForm(c); setOpen(true); }} className="p-2 text-brand-gray hover:text-brand-wine rounded-full">
               <Pencil className="w-4 h-4" />
             </button>
+            <button onClick={() => setDeleteId(c.id)} className="p-2 text-brand-gray hover:text-red-500 rounded-full">
+              <Trash2 className="w-4 h-4" />
+            </button>
           </li>
         ))}
       </ul>
@@ -93,6 +113,17 @@ function Clientes() {
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             />
             <Button onClick={() => save.mutate()} disabled={!form.name || !form.phone || save.isPending} className="w-full bg-brand-wine text-brand-cream">Salvar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <DialogContent className="bg-brand-cream max-w-[400px]">
+          <DialogHeader><DialogTitle className="text-brand-wine">Excluir cliente?</DialogTitle></DialogHeader>
+          <p className="text-sm text-brand-gray">Esta ação não pode ser desfeita. A cliente e todos os seus dados serão removidos.</p>
+          <div className="flex gap-2 mt-4">
+            <Button variant="outline" onClick={() => setDeleteId(null)} className="flex-1">Cancelar</Button>
+            <Button onClick={() => deleteId && remove.mutate(deleteId)} disabled={remove.isPending} className="flex-1 bg-red-500 hover:bg-red-600 text-white border-none">Excluir</Button>
           </div>
         </DialogContent>
       </Dialog>
