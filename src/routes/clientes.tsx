@@ -67,7 +67,7 @@ function Clientes() {
   return (
     <AppShell>
       <header className="pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-script text-brand-wine flex items-baseline gap-2">
+        <h1 className="text-2xl font-serif italic text-brand-wine flex items-baseline gap-2">
           Clientes <span className="text-sm font-sans text-brand-gray">{clients.length} cadastros</span>
         </h1>
         <button onClick={() => { setForm({ id: "", name: "", phone: "" }); setOpen(true); }} className="w-9 h-9 rounded-full bg-brand-wine text-brand-cream flex items-center justify-center"><Plus className="w-4 h-4" /></button>

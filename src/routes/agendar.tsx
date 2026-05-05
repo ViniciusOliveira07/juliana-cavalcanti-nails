@@ -223,7 +223,7 @@ function Agendar() {
     <PageWrap>
       <BrandHeader />
       <div className="text-center mt-2 mb-6">
-        <h2 className="text-lg font-medium text-brand-wine">Agende seu momento</h2>
+        <h2 className="text-lg font-serif italic text-brand-wine">Agende seu momento</h2>
         <p className="text-sm text-brand-gray mt-1">Selecione o serviço e horário desejado</p>
       </div>
 

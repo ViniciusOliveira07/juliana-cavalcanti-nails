@@ -82,7 +82,7 @@ function Config() {
   return (
     <AppShell>
       <header className="pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-script text-brand-wine">Configurações</h1>
+        <h1 className="text-2xl font-serif italic text-brand-wine">Configurações</h1>
         <button onClick={() => signOut()} className="text-brand-wine"><LogOut className="w-5 h-5" /></button>
       </header>
 

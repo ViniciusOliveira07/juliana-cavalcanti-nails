@@ -31,7 +31,7 @@ function Sucesso() {
           <BrandHeader />
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-brand-rose-bg flex items-center justify-center"><Check className="w-10 h-10 text-brand-coral" strokeWidth={3} /></div>
-            <h2 className="text-2xl font-script text-brand-wine mt-3">Agendamento confirmado!</h2>
+            <h2 className="text-2xl font-serif italic text-brand-wine mt-3">Agendamento confirmado!</h2>
           </div>
           {a && (
             <div className="bg-brand-rose-bg rounded-2xl p-4 mt-5">

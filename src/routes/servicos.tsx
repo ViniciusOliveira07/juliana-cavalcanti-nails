@@ -82,7 +82,7 @@ function Servicos() {
   return (
     <AppShell>
       <header className="pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-script text-brand-wine">Serviços</h1>
+        <h1 className="text-2xl font-serif italic text-brand-wine">Serviços</h1>
         <button onClick={() => { setEditing({ name: "", duration_minutes: 60, price: 0, active: true }); setOpen(true); }}
           className="w-9 h-9 rounded-full bg-brand-wine text-brand-cream flex items-center justify-center"><Plus className="w-4 h-4" /></button>
       </header>

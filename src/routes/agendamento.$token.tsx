@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandHeader } from "@/components/brand-header";
@@ -56,8 +56,8 @@ function Manage() {
                 <span className={`inline-block px-3 py-1 rounded-full text-xs ${STATUS[a.status]?.cls}`}>{STATUS[a.status]?.label}</span>
                 <p className="text-base font-medium text-brand-wine mt-3">{a.client.name}</p>
                 <p className="text-sm text-brand-wine mt-1">{a.service.name} · {fmtDuration(a.service.duration_minutes)} · {fmtMoney(a.service.price)}</p>
-                <p className="text-2xl font-script text-brand-wine mt-3">{capitalize(fmtDate(a.start_at))}</p>
-                <p className="text-3xl font-script text-brand-wine">às {fmtTime(a.start_at)}</p>
+                <p className="text-xl font-serif italic text-brand-wine mt-4">{capitalize(fmtDate(a.start_at))}</p>
+                <p className="text-2xl font-serif italic text-brand-wine">às {fmtTime(a.start_at)}</p>
                 {a.client_notes && <p className="text-sm text-brand-gray mt-3 italic">"{a.client_notes}"</p>}
               </div>
 
@@ -69,7 +69,16 @@ function Manage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-sm text-brand-gray text-center mt-4">Este agendamento foi {STATUS[a.status]?.label.toLowerCase()}</p>
+                <div className="text-center mt-6 py-4 border-t border-brand-wine/10">
+                  <p className="text-sm text-brand-gray mb-4">
+                    Este agendamento foi {STATUS[a.status]?.label.toLowerCase()}.
+                  </p>
+                  <Link to="/agendar">
+                    <Button className="w-full bg-brand-wine text-brand-cream h-12 shadow-md hover:scale-[1.02] transition-transform">
+                      Agendar novo horário ✨
+                    </Button>
+                  </Link>
+                </div>
               )}
             </>
           )}

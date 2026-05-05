@@ -25,7 +25,7 @@ function Agenda() {
   return (
     <AppShell>
       <header className="pt-6 pb-3">
-        <h1 className="text-2xl font-script text-brand-wine">Agenda</h1>
+        <h1 className="text-2xl font-serif italic text-brand-wine">Agenda</h1>
       </header>
 
       <div className="flex items-center justify-between bg-brand-cream rounded-xl px-3 py-2.5">
@@ -37,7 +37,7 @@ function Agenda() {
         <button onClick={() => setDate(addDays(date, 1))} className="p-1.5"><ChevronRight className="w-5 h-5 text-brand-wine" /></button>
       </div>
 
-      <div className="mt-4 space-y-1.5">
+      <div className="mt-4 space-y-1.5 pb-24">
         {hours.map((h) => {
           const slot = active.find((a) => new Date(a.start_at).getHours() === h);
           return (
@@ -60,8 +60,8 @@ function Agenda() {
       </div>
 
       <button onClick={() => setCreating({ date })}
-        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-brand-wine text-brand-cream px-5 py-3 rounded-full shadow-lg hover:bg-brand-wine/90">
-        <Plus className="w-4 h-4" /> Novo agendamento
+        className="fixed bottom-24 right-6 z-20 flex items-center justify-center w-14 h-14 bg-brand-wine text-brand-cream rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all">
+        <Plus className="w-7 h-7" />
       </button>
 
       {selected && <ApptDetailModal id={selected} onClose={() => setSelected(null)} />}

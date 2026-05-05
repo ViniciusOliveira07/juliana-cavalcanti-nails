@@ -46,7 +46,7 @@ function ClientDetail() {
         <>
           <div className="bg-brand-cream rounded-2xl p-5 text-center">
             <div className="w-16 h-16 rounded-full bg-brand-rose-bg flex items-center justify-center text-brand-wine text-xl font-medium mx-auto">{initials(client.name)}</div>
-            <p className="font-script text-2xl text-brand-wine mt-2">{client.name}</p>
+            <p className="font-serif italic text-2xl text-brand-wine mt-2">{client.name}</p>
             <button className="text-xs text-brand-gray mt-1 inline-flex items-center gap-1"
               onClick={() => { navigator.clipboard.writeText(client.phone); toast.success("Telefone copiado"); }}>
               {client.phone} <Copy className="w-3 h-3" />

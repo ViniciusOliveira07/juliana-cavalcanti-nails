@@ -68,33 +68,43 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-[420px] bg-brand-cream rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-brand-wine">Novo agendamento — Etapa {step} de 3</DialogTitle>
+          <DialogTitle className="text-brand-wine font-serif italic text-xl">Novo agendamento — {step}/3</DialogTitle>
         </DialogHeader>
 
         {step === 1 && (
-          <div className="space-y-3">
-            <Input placeholder="Buscar por nome ou telefone" value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} />
-            <div className="max-h-48 overflow-y-auto space-y-1">
-              {filteredClients.slice(0, 8).map(c => (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-brand-gray uppercase ml-1">Buscar cliente</Label>
+              <Input autoFocus={false} placeholder="Nome ou telefone..." value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} className="h-12 rounded-xl" />
+            </div>
+            
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+              {filteredClients.length === 0 && clientQuery && <p className="text-center text-xs text-brand-gray py-4">Nenhum resultado</p>}
+              {filteredClients.slice(0, 10).map(c => (
                 <button key={c.id} onClick={() => { setClientId(c.id); setStep(2); }}
-                  className="w-full text-left p-2.5 rounded-lg hover:bg-brand-rose-bg">
+                  className="w-full text-left p-3 rounded-xl hover:bg-brand-rose-bg transition-colors border border-transparent hover:border-brand-wine/10">
                   <p className="text-sm font-medium text-brand-wine">{c.name}</p>
                   <p className="text-xs text-brand-gray">{fmtPhone(c.phone)}</p>
                 </button>
               ))}
             </div>
-            <div className="border-t border-brand-border pt-3 space-y-2">
-              <p className="text-xs text-brand-gray uppercase">Ou nova cliente</p>
-              <Input placeholder="Nome" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />
-              <IMaskInput
-                mask="+55 (00) 00000-0000"
-                placeholder="+55 (11) 99999-9999"
-                value={newClient.phone}
-                unmask={false}
-                onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-              />
-              <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine text-brand-cream">Continuar</Button>
+
+            <div className="border-t border-brand-border pt-4 space-y-3">
+              <p className="text-xs text-brand-gray uppercase ml-1">Ou cadastrar nova cliente</p>
+              <div className="grid grid-cols-1 gap-2">
+                <Input placeholder="Nome completo" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="h-11 rounded-xl" />
+                <IMaskInput
+                  mask="+55 (00) 00000-0000"
+                  placeholder="+55 (11) 99999-9999"
+                  value={newClient.phone}
+                  unmask={false}
+                  onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
+                  className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-wine disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+              <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine text-brand-cream h-12 rounded-xl shadow-md">
+                Cadastrar e Continuar
+              </Button>
             </div>
           </div>
         )}
