@@ -38,11 +38,12 @@ export const useAppointmentsByDate = (date: Date) =>
     },
   });
 
-export const useServices = (onlyActive = false) =>
+export const useServices = (profileId?: string, onlyActive = false) =>
   useQuery({
-    queryKey: ["services", onlyActive],
+    queryKey: ["services", profileId, onlyActive],
     queryFn: async () => {
       let q = supabase.from("services").select("*").order("created_at");
+      if (profileId) q = q.eq("profile_id", profileId);
       if (onlyActive) q = q.eq("active", true);
       const { data, error } = await q;
       if (error) throw error;
@@ -60,11 +61,13 @@ export const useClients = () =>
     },
   });
 
-export const useWorkingHours = () =>
+export const useWorkingHours = (profileId?: string) =>
   useQuery({
-    queryKey: ["working_hours"],
+    queryKey: ["working_hours", profileId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("working_hours").select("*").order("weekday");
+      let q = supabase.from("working_hours").select("*").order("weekday");
+      if (profileId) q = q.eq("profile_id", profileId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },

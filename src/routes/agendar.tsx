@@ -23,8 +23,8 @@ function Agendar() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: profile } = usePublicProfile();
-  const { data: services = [] } = useServices(true);
-  const { data: hours = [] } = useWorkingHours();
+  const { data: services = [] } = useServices(profile?.id, true);
+  const { data: hours = [] } = useWorkingHours(profile?.id);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | null>(null);
   const [slotIso, setSlotIso] = useState<string | null>(null);

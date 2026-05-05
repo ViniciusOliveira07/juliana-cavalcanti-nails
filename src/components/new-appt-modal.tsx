@@ -14,7 +14,7 @@ import { IMaskInput } from "react-imask";
 export function NewApptModal({ initialDate, initialHour, onClose }: { initialDate: Date; initialHour?: number; onClose: () => void }) {
   const qc = useQueryClient();
   const { data: profile } = useProfile();
-  const { data: services = [] } = useServices(true);
+  const { data: services = [] } = useServices(profile?.id, true);
   const { data: clients = [] } = useClients();
   const [step, setStep] = useState(1);
   const [clientQuery, setClientQuery] = useState("");
@@ -28,7 +28,7 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
     clients.filter(c => c.name.toLowerCase().includes(clientQuery.toLowerCase()) || c.phone.includes(clientQuery)),
     [clients, clientQuery]);
 
-  const { data: hours = [] } = useWorkingHours();
+  const { data: hours = [] } = useWorkingHours(profile?.id);
   const selectedService = services.find(s => s.id === serviceId);
   const { data: slots = [] } = useAvailableSlots(profile, selectedService, date, hours);
 
