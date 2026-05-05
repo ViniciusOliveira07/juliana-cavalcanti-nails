@@ -94,7 +94,7 @@ function Agendar() {
         
         if (ce) {
           console.error("Erro ao criar cliente:", ce);
-          throw new Error(`Erro ao salvar seus dados: ${ce.message}`);
+          throw new Error("Erro ao salvar seus dados de contato. Por favor, tente novamente.");
         }
         clientId = newClient.id;
       }
@@ -115,8 +115,7 @@ function Agendar() {
       if (ae) {
         console.error("Erro no agendamento:", ae);
         
-        // Se o erro for de conflito, pode ser que o agendamento já tenha sido criado (ex: duplo clique ou erro de rede anterior)
-        // Vamos tentar recuperar o token do agendamento que já existe para o usuário não ver erro
+        // Tenta recuperar o token caso tenha sido criado mas retornado erro
         const { data: existingAppt } = await supabase
           .from("appointments")
           .select("access_token")
@@ -129,7 +128,7 @@ function Agendar() {
           return existingAppt.access_token;
         }
 
-        throw new Error(`Não foi possível confirmar: ${ae.message}`);
+        throw new Error("Não foi possível confirmar seu agendamento. Por favor, tente novamente ou escolha outro horário.");
       }
       
       return appt.access_token;
@@ -140,7 +139,7 @@ function Agendar() {
       navigate({ to: "/agendar/sucesso/$token", params: { token } });
     },
     onError: (e: any) => {
-      const msg = e.message || "Ocorreu um erro inesperado.";
+      const msg = e.message || "Ocorreu um erro inesperado ao processar seu agendamento.";
       toast.error(msg);
     },
   });
