@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useClients, useServices, useProfile, useAvailableSlots } from "@/lib/queries";
+import { useClients, useServices, useProfile, useAvailableSlots, useWorkingHours } from "@/lib/queries";
 import { fmtMoney, fmtDuration, fmtTime, fmtPhone } from "@/lib/format";
 import { addDays, format } from "date-fns";
 import { toast } from "sonner";
@@ -28,7 +28,9 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
     clients.filter(c => c.name.toLowerCase().includes(clientQuery.toLowerCase()) || c.phone.includes(clientQuery)),
     [clients, clientQuery]);
 
-  const { data: slots = [] } = useAvailableSlots(profile?.id, serviceId ?? undefined, date);
+  const { data: hours = [] } = useWorkingHours();
+  const selectedService = services.find(s => s.id === serviceId);
+  const { data: slots = [] } = useAvailableSlots(profile, selectedService, date, hours);
 
   const create = useMutation({
     mutationFn: async () => {
