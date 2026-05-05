@@ -83,8 +83,7 @@ function Agendar() {
 
       if (existingClient) {
         clientId = existingClient.id;
-        // Opcional: Atualizar o nome se o cliente quiser
-        await supabase.from("clients").update({ name: form.name }).eq("id", clientId);
+        // Removido o update do nome para evitar erro de RLS (permissão) em clientes já existentes
       } else {
         // 2. Se não existir, registrar novo cliente
         const { data: newClient, error: ce } = await supabase.from("clients").insert({
@@ -94,8 +93,8 @@ function Agendar() {
         }).select("id").single();
         
         if (ce) {
-          if (ce.code === "23505") throw new Error("Este número de telefone já está cadastrado.");
-          throw new Error("Erro ao salvar seus dados. Por favor, tente novamente.");
+          console.error("Erro ao criar cliente:", ce);
+          throw new Error(`Erro ao salvar seus dados: ${ce.message}`);
         }
         clientId = newClient.id;
       }
@@ -115,7 +114,7 @@ function Agendar() {
       
       if (ae) {
         console.error("Erro no agendamento:", ae);
-        throw new Error("Não foi possível confirmar o agendamento. O horário pode ter sido preenchido agora pouco.");
+        throw new Error(`Não foi possível confirmar: ${ae.message}`);
       }
       
       return appt.access_token;
