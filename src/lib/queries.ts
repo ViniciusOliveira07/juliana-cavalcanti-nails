@@ -81,15 +81,19 @@ export const useAvailableSlots = (
 ) =>
   useQuery({
     enabled: !!profile?.id && !!service?.id && !!date,
-    queryKey: ["slots", profile?.id, service?.id, date?.toDateString()],
+    queryKey: ["slots", profile?.id, service?.id, date?.toDateString(), allWorkingHours.length],
     queryFn: async () => {
+      if (!allWorkingHours || allWorkingHours.length === 0) return [];
+
       // 1. Horário de funcionamento do dia selecionado
-      const whData = allWorkingHours.find(h => h.weekday === date!.getDay());
+      const dayOfWeek = date!.getDay();
+      const whData = allWorkingHours.find(h => h.weekday === dayOfWeek);
       if (!whData || !whData.active) return [];
 
       // 2. Agendamentos e bloqueios do dia
-      const startOfDayStr = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), 0, 0, 0).toISOString();
-      const endOfDayStr = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), 23, 59, 59).toISOString();
+      const d = date!;
+      const startOfDayStr = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).toISOString();
+      const endOfDayStr = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString();
 
       const [{ data: appts }, { data: blocks }] = await Promise.all([
         supabase.from("appointments")
@@ -105,7 +109,7 @@ export const useAvailableSlots = (
           .lte("start_at", endOfDayStr)
       ]);
 
-      const bufferMs = (profile.buffer_minutes || 0) * 60000;
+      const bufferMs = (Number(profile.buffer_minutes) || 0) * 60000;
       
       const busy = [
         ...(appts || []).map(a => ({ 
@@ -119,11 +123,12 @@ export const useAvailableSlots = (
       ];
 
       // 3. Gerar horários a cada 30 min
-      const [sh, sm] = whData.start_time.split(":").map(Number);
-      const [eh, em] = whData.end_time.split(":").map(Number);
-      const cursor = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), sh, sm, 0);
-      const endLimit = new Date(date!.getFullYear(), date!.getMonth(), date!.getDate(), eh, em, 0).getTime();
-      const durMs = service.duration_minutes * 60000;
+      const [sh, sm] = (whData.start_time || "09:00").split(":").map(Number);
+      const [eh, em] = (whData.end_time || "18:00").split(":").map(Number);
+      
+      const cursor = new Date(d.getFullYear(), d.getMonth(), d.getDate(), sh, sm, 0);
+      const endLimit = new Date(d.getFullYear(), d.getMonth(), d.getDate(), eh, em, 0).getTime();
+      const durMs = (Number(service.duration_minutes) || 30) * 60000;
       const nowMs = Date.now();
       
       const slots: { slot_start: string, slot_end: string }[] = [];
@@ -144,7 +149,7 @@ export const useAvailableSlots = (
 
       return slots;
     },
-    staleTime: 30_000,
+    staleTime: 5_000, // Reduced staleTime for more frequent updates
     placeholderData: keepPreviousData,
   });
 
