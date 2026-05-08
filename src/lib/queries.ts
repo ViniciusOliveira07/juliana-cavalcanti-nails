@@ -29,7 +29,7 @@ export const useAppointmentsByDate = (date: Date) =>
       const end = endOfDay(date).toISOString();
       const { data, error } = await supabase
         .from("appointments")
-        .select("id,start_at,end_at,status,client_notes,access_token,created_by, client:clients(id,name,phone), service:services(id,name,duration_minutes,price)")
+        .select("id,start_at,end_at,status,client_notes,access_token,created_by,final_price,payment_status, client:clients(id,name,phone), service:services(id,name,duration_minutes,price)")
         .gte("start_at", start)
         .lte("start_at", end)
         .order("start_at");
