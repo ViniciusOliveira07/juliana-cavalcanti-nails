@@ -6,6 +6,9 @@ import { useAppointmentsByDate, useProfile, minutesUntil } from "@/lib/queries";
 import { fmtDate, fmtMoney, fmtTime, fmtDuration, capitalize } from "@/lib/format";
 import { ApptDetailModal } from "@/components/appt-detail-modal";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { startOfDay, endOfDay } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   component: () => <ProtectedRoute><Dashboard /></ProtectedRoute>,
