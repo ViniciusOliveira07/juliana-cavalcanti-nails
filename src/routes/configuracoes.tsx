@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { fmtMoney, fmtDuration } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { CategoriesSection } from "@/components/categories-section";
 
 const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
