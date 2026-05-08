@@ -18,6 +18,7 @@ import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FinanceiroDespesasRouteImport } from './routes/financeiro.despesas'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 import { Route as AgendamentoTokenRouteImport } from './routes/agendamento.$token'
 import { Route as AgendadoTokenRouteImport } from './routes/agendado.$token'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceiroDespesasRoute = FinanceiroDespesasRouteImport.update({
+  id: '/despesas',
+  path: '/despesas',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
 const ClientesIdRoute = ClientesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -90,12 +96,13 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
-  '/financeiro': typeof FinanceiroRoute
+  '/financeiro': typeof FinanceiroRouteWithChildren
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
   '/agendado/$token': typeof AgendadoTokenRoute
   '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/financeiro/despesas': typeof FinanceiroDespesasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,12 +111,13 @@ export interface FileRoutesByTo {
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
-  '/financeiro': typeof FinanceiroRoute
+  '/financeiro': typeof FinanceiroRouteWithChildren
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
   '/agendado/$token': typeof AgendadoTokenRoute
   '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/financeiro/despesas': typeof FinanceiroDespesasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,12 +127,13 @@ export interface FileRoutesById {
   '/clientes': typeof ClientesRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
-  '/financeiro': typeof FinanceiroRoute
+  '/financeiro': typeof FinanceiroRouteWithChildren
   '/login': typeof LoginRoute
   '/servicos': typeof ServicosRoute
   '/agendado/$token': typeof AgendadoTokenRoute
   '/agendamento/$token': typeof AgendamentoTokenRoute
   '/clientes/$id': typeof ClientesIdRoute
+  '/financeiro/despesas': typeof FinanceiroDespesasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/agendado/$token'
     | '/agendamento/$token'
     | '/clientes/$id'
+    | '/financeiro/despesas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/agendado/$token'
     | '/agendamento/$token'
     | '/clientes/$id'
+    | '/financeiro/despesas'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/agendado/$token'
     | '/agendamento/$token'
     | '/clientes/$id'
+    | '/financeiro/despesas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -178,7 +190,7 @@ export interface RootRouteChildren {
   ClientesRoute: typeof ClientesRouteWithChildren
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
-  FinanceiroRoute: typeof FinanceiroRoute
+  FinanceiroRoute: typeof FinanceiroRouteWithChildren
   LoginRoute: typeof LoginRoute
   ServicosRoute: typeof ServicosRoute
   AgendadoTokenRoute: typeof AgendadoTokenRoute
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/financeiro/despesas': {
+      id: '/financeiro/despesas'
+      path: '/despesas'
+      fullPath: '/financeiro/despesas'
+      preLoaderRoute: typeof FinanceiroDespesasRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
     '/clientes/$id': {
       id: '/clientes/$id'
       path: '/$id'
@@ -286,6 +305,18 @@ const ClientesRouteWithChildren = ClientesRoute._addFileChildren(
   ClientesRouteChildren,
 )
 
+interface FinanceiroRouteChildren {
+  FinanceiroDespesasRoute: typeof FinanceiroDespesasRoute
+}
+
+const FinanceiroRouteChildren: FinanceiroRouteChildren = {
+  FinanceiroDespesasRoute: FinanceiroDespesasRoute,
+}
+
+const FinanceiroRouteWithChildren = FinanceiroRoute._addFileChildren(
+  FinanceiroRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
@@ -293,7 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientesRoute: ClientesRouteWithChildren,
   ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
-  FinanceiroRoute: FinanceiroRoute,
+  FinanceiroRoute: FinanceiroRouteWithChildren,
   LoginRoute: LoginRoute,
   ServicosRoute: ServicosRoute,
   AgendadoTokenRoute: AgendadoTokenRoute,
