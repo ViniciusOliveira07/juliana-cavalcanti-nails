@@ -126,6 +126,8 @@ function Config() {
           </div>
         </div>
       </div>
+
+      <CategoriesSection />
     </AppShell>
   );
 }
