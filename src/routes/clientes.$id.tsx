@@ -30,12 +30,16 @@ function ClientDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("appointments")
-        .select("id,start_at,status, service:services(name,price)")
+        .select("id,start_at,status,final_price,payment_status, service:services(name,price), payments(amount)")
         .eq("client_id", id)
         .order("start_at", { ascending: false });
       return data ?? [];
     },
   });
+
+  const totalSpent = (history as any[])
+    .filter((a) => a.payment_status === "paid")
+    .reduce((s, a) => s + Number(a.payments?.[0]?.amount ?? a.final_price ?? a.service?.price ?? 0), 0);
 
   return (
     <AppShell>
