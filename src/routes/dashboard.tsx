@@ -6,6 +6,9 @@ import { useAppointmentsByDate, useProfile, minutesUntil } from "@/lib/queries";
 import { fmtDate, fmtMoney, fmtTime, fmtDuration, capitalize } from "@/lib/format";
 import { ApptDetailModal } from "@/components/appt-detail-modal";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { startOfDay, endOfDay } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   component: () => <ProtectedRoute><Dashboard /></ProtectedRoute>,
@@ -17,10 +20,25 @@ function Dashboard() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const active = appts.filter((a) => a.status !== "cancelled");
-  const revenue = active.reduce((s, a) => s + Number(a.service.price), 0);
+  const revenue = active.reduce((s, a) => s + Number((a as any).final_price ?? a.service.price), 0);
   const upcoming = active.filter((a) => new Date(a.start_at) > new Date());
   const next = upcoming[0];
   const rest = upcoming.slice(1);
+
+  const { data: receivedToday = 0 } = useQuery({
+    queryKey: ["payments-today", profile?.id, new Date().toDateString()],
+    enabled: !!profile?.id,
+    queryFn: async () => {
+      const start = startOfDay(new Date()).toISOString();
+      const end = endOfDay(new Date()).toISOString();
+      const { data } = await supabase
+        .from("payments")
+        .select("amount, appointment:appointments!inner(profile_id)")
+        .eq("appointment.profile_id", profile!.id)
+        .gte("paid_at", start).lte("paid_at", end);
+      return (data ?? []).reduce((s: number, p: any) => s + Number(p.amount), 0);
+    },
+  });
 
   return (
     <AppShell>
@@ -34,7 +52,11 @@ function Dashboard() {
 
       <div className="grid grid-cols-2 gap-3 mt-5">
         <Card label="Hoje" value={String(active.length)} hint="agendamentos" />
-        <Card label="Faturamento previsto" value={fmtMoney(revenue)} hint="do dia" small />
+        <div className="bg-brand-cream rounded-2xl p-4">
+          <p className="text-xs text-brand-gray">Faturamento</p>
+          <p className="text-2xl font-medium text-brand-wine mt-1">{fmtMoney(revenue)}</p>
+          <p className="text-xs text-emerald-600 mt-0.5">{fmtMoney(receivedToday)} recebido</p>
+        </div>
       </div>
 
       <Section title="Próxima cliente">

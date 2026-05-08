@@ -23,7 +23,9 @@ export type Database = {
           created_at: string
           created_by: string
           end_at: string
+          final_price: number | null
           id: string
+          payment_status: string
           profile_id: string
           service_id: string
           start_at: string
@@ -37,7 +39,9 @@ export type Database = {
           created_at?: string
           created_by?: string
           end_at: string
+          final_price?: number | null
           id?: string
+          payment_status?: string
           profile_id: string
           service_id: string
           start_at: string
@@ -51,7 +55,9 @@ export type Database = {
           created_at?: string
           created_by?: string
           end_at?: string
+          final_price?: number | null
           id?: string
+          payment_status?: string
           profile_id?: string
           service_id?: string
           start_at?: string
@@ -116,6 +122,101 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          name: string
+          profile_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          profile_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          is_recurring: boolean
+          notes: string | null
+          payment_method: string | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          description: string
+          expense_date: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_events: {
         Row: {
           appointment_id: string
@@ -153,6 +254,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notification_events_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          appointment_id: string
+          created_at: string
+          id: string
+          method: string
+          notes: string | null
+          paid_at: string
+        }
+        Insert: {
+          amount: number
+          appointment_id: string
+          created_at?: string
+          id?: string
+          method: string
+          notes?: string | null
+          paid_at?: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
@@ -316,7 +455,29 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_expenses_by_category: {
+        Args: { p_month: number; p_profile_id: string; p_year: number }
+        Returns: {
+          category_id: string
+          count: number
+          icon: string
+          name: string
+          total: number
+        }[]
+      }
+      get_financial_summary: {
+        Args: { p_month: number; p_profile_id: string; p_year: number }
+        Returns: Json
+      }
       get_my_profile_id: { Args: never; Returns: string }
+      get_revenue_by_method: {
+        Args: { p_month: number; p_profile_id: string; p_year: number }
+        Returns: {
+          count: number
+          method: string
+          total: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

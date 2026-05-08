@@ -46,7 +46,10 @@ function Agenda() {
               {slot ? (
                 <button onClick={() => setSelected(slot.id)}
                   className="flex-1 text-left bg-brand-rose-bg rounded-xl pl-3 pr-3 py-2.5 border-l-[3px] border-brand-coral">
-                  <p className="text-sm font-medium text-brand-wine">{slot.client.name} <span className="text-xs text-brand-gray">· {fmtTime(slot.start_at)}</span></p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-brand-wine flex-1 truncate">{slot.client.name} <span className="text-xs text-brand-gray">· {fmtTime(slot.start_at)}</span></p>
+                    {(slot as any).payment_status === "paid" && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Pago</span>}
+                  </div>
                   <p className="text-xs text-brand-gray">{slot.service.name} · {fmtDuration(slot.service.duration_minutes)}</p>
                 </button>
               ) : (

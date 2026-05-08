@@ -1,13 +1,14 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { fmtDate, fmtTime, fmtMoney, fmtDuration, initials, capitalize } from "@/lib/format";
 import { toast } from "sonner";
-import type { Appt } from "@/lib/queries";
+import { CompleteApptModal } from "@/components/complete-appt-modal";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  scheduled: { label: "Agendado", cls: "bg-brand-coral text-brand-cream" },
+  scheduled: { label: "Agendado", cls: "bg-brand-coral text-brand-wine" },
   completed: { label: "Concluído", cls: "bg-emerald-500 text-white" },
   cancelled: { label: "Cancelado", cls: "bg-brand-gray text-brand-cream" },
   no_show: { label: "Faltou", cls: "bg-red-500 text-white" },
@@ -15,14 +16,16 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 
 export function ApptDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
   const qc = useQueryClient();
+  const [completing, setCompleting] = useState(false);
+
   const { data: a, isLoading } = useQuery({
     queryKey: ["appt", id],
-    queryFn: async (): Promise<Appt | null> => {
+    queryFn: async (): Promise<any> => {
       const { data } = await supabase
         .from("appointments")
-        .select("id,start_at,end_at,status,client_notes,access_token,created_by, client:clients(id,name,phone), service:services(id,name,duration_minutes,price)")
+        .select("id,start_at,end_at,status,client_notes,access_token,created_by,final_price,payment_status, client:clients(id,name,phone), service:services(id,name,duration_minutes,price), payments(amount,method,paid_at)")
         .eq("id", id).maybeSingle();
-      return (data as any) ?? null;
+      return data ?? null;
     },
   });
 
@@ -39,6 +42,10 @@ export function ApptDetailModal({ id, onClose }: { id: string; onClose: () => vo
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  if (completing && a) {
+    return <CompleteApptModal apptId={id} onClose={() => { setCompleting(false); onClose(); }} />;
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -57,7 +64,10 @@ export function ApptDetailModal({ id, onClose }: { id: string; onClose: () => vo
             </div>
             <div className="bg-brand-rose-bg rounded-xl p-4">
               <p className="text-sm text-brand-wine font-medium">{capitalize(fmtDate(a.start_at))} às {fmtTime(a.start_at)}</p>
-              <p className="text-xs text-brand-gray mt-1">{a.service.name} · {fmtDuration(a.service.duration_minutes)} · {fmtMoney(a.service.price)}</p>
+              <p className="text-xs text-brand-gray mt-1">{a.service.name} · {fmtDuration(a.service.duration_minutes)} · {fmtMoney(a.final_price ?? a.service.price)}</p>
+              {a.payment_status === "paid" && a.payments?.[0] && (
+                <p className="text-xs text-emerald-700 mt-1">✓ Pago — {fmtMoney(a.payments[0].amount)} ({a.payments[0].method})</p>
+              )}
             </div>
             {a.client_notes && (
               <div>
@@ -65,16 +75,17 @@ export function ApptDetailModal({ id, onClose }: { id: string; onClose: () => vo
                 <p className="text-sm text-brand-wine">{a.client_notes}</p>
               </div>
             )}
-            <span className={`inline-block px-3 py-1 rounded-full text-xs ${STATUS_LABEL[a.status]?.cls}`}>{STATUS_LABEL[a.status]?.label}</span>
+            <div className="flex gap-2">
+              <span className={`inline-block px-3 py-1 rounded-full text-xs ${STATUS_LABEL[a.status]?.cls}`}>{STATUS_LABEL[a.status]?.label}</span>
+              {a.payment_status === "paid" && <span className="inline-block px-3 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">Pago</span>}
+            </div>
 
             {a.status === "scheduled" && (
               <div className="space-y-2 pt-2">
-                {new Date(a.start_at) <= new Date() && (
-                  <>
-                    <Button onClick={() => update.mutate({ status: "completed" })} className="w-full bg-brand-wine hover:bg-brand-wine/90 text-brand-cream">Marcar como concluído</Button>
-                    <Button onClick={() => update.mutate({ status: "no_show" })} variant="outline" className="w-full">Marcar como faltou</Button>
-                  </>
-                )}
+                <Button onClick={() => setCompleting(true)} className="w-full bg-brand-wine hover:bg-brand-wine/90 text-brand-cream">
+                  Marcar como concluído
+                </Button>
+                <Button onClick={() => update.mutate({ status: "no_show" })} variant="outline" className="w-full">Marcar como faltou</Button>
                 <Button
                   onClick={() => { if (confirm("Cancelar este agendamento?")) update.mutate({ status: "cancelled", cancelled_at: new Date().toISOString() }); }}
                   variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50">
