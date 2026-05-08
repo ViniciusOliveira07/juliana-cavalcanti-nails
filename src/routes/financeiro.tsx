@@ -27,15 +27,14 @@ function useFinancial(profileId: string | undefined, year: number, month: number
     queryKey: ["financial", profileId, year, month],
     enabled: !!profileId,
     queryFn: async () => {
+      const pid = profileId!;
+      let py = year, pm = month - 1;
+      if (pm < 1) { pm = 12; py -= 1; }
       const [summary, prev, methods, cats] = await Promise.all([
-        supabase.rpc("get_financial_summary", { p_profile_id: profileId, p_year: year, p_month: month }),
-        (() => {
-          let py = year, pm = month - 1;
-          if (pm < 1) { pm = 12; py -= 1; }
-          return supabase.rpc("get_financial_summary", { p_profile_id: profileId, p_year: py, p_month: pm });
-        })(),
-        supabase.rpc("get_revenue_by_method", { p_profile_id: profileId, p_year: year, p_month: month }),
-        supabase.rpc("get_expenses_by_category", { p_profile_id: profileId, p_year: year, p_month: month }),
+        supabase.rpc("get_financial_summary", { p_profile_id: pid, p_year: year, p_month: month }),
+        supabase.rpc("get_financial_summary", { p_profile_id: pid, p_year: py, p_month: pm }),
+        supabase.rpc("get_revenue_by_method", { p_profile_id: pid, p_year: year, p_month: month }),
+        supabase.rpc("get_expenses_by_category", { p_profile_id: pid, p_year: year, p_month: month }),
       ]);
       return {
         summary: summary.data as any,
