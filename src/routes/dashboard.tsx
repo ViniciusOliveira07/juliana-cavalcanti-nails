@@ -64,7 +64,7 @@ function Dashboard() {
           <button onClick={() => setSelected(next.id)} className="w-full text-left rounded-2xl p-5 text-brand-cream"
             style={{ background: "linear-gradient(135deg, var(--brand-coral), var(--brand-wine))" }}>
             <p className="text-xs uppercase tracking-wider opacity-80">Em {Math.max(0, minutesUntil(next.start_at))} min</p>
-            <p className="text-xl font-medium mt-1">{next.client.name}</p>
+            <p className="text-xl font-medium mt-1">{next.client?.name ?? "Cliente removida"}</p>
             <p className="text-3xl font-script mt-1">{fmtTime(next.start_at)}</p>
             <div className="flex flex-wrap gap-2 mt-3">
               <Pill>{next.service.name}</Pill>
@@ -89,7 +89,7 @@ function Dashboard() {
                 <button onClick={() => setSelected(a.id)} className="w-full flex items-center gap-3 bg-brand-cream rounded-xl p-3 text-left">
                   <span className="px-2.5 py-1 rounded-lg bg-brand-rose-bg text-brand-wine text-sm font-medium">{fmtTime(a.start_at)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-brand-wine truncate">{a.client.name}</p>
+                    <p className="text-sm font-medium text-brand-wine truncate">{a.client?.name ?? "Cliente removida"}</p>
                     <p className="text-xs text-brand-gray truncate">{a.service.name} · {fmtDuration(a.service.duration_minutes)}</p>
                   </div>
                 </button>

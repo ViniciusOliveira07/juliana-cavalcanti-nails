@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           access_token: string
           cancelled_at: string | null
-          client_id: string
+          client_id: string | null
           client_notes: string | null
           created_at: string
           created_by: string
@@ -34,7 +34,7 @@ export type Database = {
         Insert: {
           access_token?: string
           cancelled_at?: string | null
-          client_id: string
+          client_id?: string | null
           client_notes?: string | null
           created_at?: string
           created_by?: string
@@ -50,7 +50,7 @@ export type Database = {
         Update: {
           access_token?: string
           cancelled_at?: string | null
-          client_id?: string
+          client_id?: string | null
           client_notes?: string | null
           created_at?: string
           created_by?: string

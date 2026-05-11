@@ -35,7 +35,7 @@ function Sucesso() {
           </div>
           {a && (
             <div className="bg-brand-rose-bg rounded-2xl p-4 mt-5">
-              <p className="text-sm font-medium text-brand-wine">{a.client.name}</p>
+              <p className="text-sm font-medium text-brand-wine">{a.client?.name ?? "Cliente removida"}</p>
               <p className="text-sm text-brand-wine mt-1">{a.service.name} · {fmtDuration(a.service.duration_minutes)} · {fmtMoney(a.service.price)}</p>
               <p className="text-sm text-brand-wine mt-1">{capitalize(fmtDate(a.start_at))} às {fmtTime(a.start_at)}</p>
             </div>
