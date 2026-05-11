@@ -168,7 +168,7 @@ function Agendar() {
           selectedService={selectedService}
           calendarDays={calendarDays}
           month={month} setMonth={setMonth}
-          date={date} setDate={(d) => { setDate(d); setSlotIso(null); }}
+          date={date} setDate={(d: Date) => { setDate(d); setSlotIso(null); }}
           today={today} maxDate={maxDate}
           inactiveDays={inactiveDays}
           slots={slots} slotsLoading={slotsLoading}
