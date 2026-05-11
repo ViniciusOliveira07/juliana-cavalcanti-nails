@@ -23,8 +23,8 @@ function Agendar() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: profile } = usePublicProfile();
-  const { data: services = [] } = useServices(profile?.id, true);
-  const { data: hours = [] } = useWorkingHours(profile?.id);
+  const { data: services = [], isLoading: servicesLoading } = useServices(profile?.id, true);
+  const { data: hours = [], isLoading: hoursLoading } = useWorkingHours(profile?.id);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | null>(null);
   const [slotIso, setSlotIso] = useState<string | null>(null);
@@ -252,8 +252,12 @@ function Agendar() {
       </details>
 
       <Section id="section-service" n={1} label="Escolha o serviço">
-        <div className="space-y-2">
-          {services.map(s => {
+        <div className="space-y-2 min-h-[260px]">
+          {servicesLoading || !profile ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-[78px] bg-white/60 animate-pulse rounded-2xl border border-brand-rose-bg" />
+            ))
+          ) : services.map(s => {
             const sel = serviceId === s.id;
             return (
               <button key={s.id} onClick={() => setServiceId(s.id)}
@@ -278,32 +282,38 @@ function Agendar() {
 
       <Section id="section-date" n={2} label="Escolha o dia">
         <div className="bg-white shadow-sm border border-brand-rose-bg rounded-3xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <button onClick={() => setMonth(addMonths(month, -1))} className="p-1"><ChevronLeft className="w-4 h-4 text-brand-wine" /></button>
-            <p className="text-sm font-medium text-brand-wine">{capitalize(format(month, "MMMM yyyy", { locale: ptBR }))}</p>
-            <button onClick={() => setMonth(addMonths(month, 1))} className="p-1"><ChevronRight className="w-4 h-4 text-brand-wine" /></button>
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {DAY_NAMES.map(d => <p key={d} className="text-center text-[10px] text-brand-gray py-1">{d}</p>)}
-            {calendarDays.map(d => {
-              const past = isBefore(d, today);
-              const tooFar = isBefore(maxDate, d);
-              const inactive = inactiveDays.has(d.getDay());
-              const otherMonth = !isSameMonth(d, month);
-              const disabled = past || tooFar || inactive || otherMonth;
-              const sel = date && isSameDay(date, d);
-              const isToday = isSameDay(d, today);
-              return (
-                <button key={d.toISOString()} disabled={disabled} onClick={() => { setDate(d); setSlotIso(null); }}
-                  className={`aspect-square text-sm rounded-xl flex flex-col items-center justify-center transition-all
-                    ${disabled ? "text-brand-gray/30" : ""}
-                    ${sel ? "bg-brand-wine text-brand-cream font-medium shadow-md scale-105" : !disabled ? "bg-brand-rose-bg/50 border border-transparent text-brand-wine hover:bg-brand-rose-bg hover:border-brand-wine/20" : ""}`}>
-                  {format(d, "d")}
-                  {isToday && !sel && <span className="w-1 h-1 rounded-full bg-brand-coral" />}
-                </button>
-              );
-            })}
-          </div>
+          {hoursLoading || !profile ? (
+            <div className="h-[280px] animate-pulse bg-brand-rose-bg/30 rounded-2xl" />
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <button onClick={() => setMonth(addMonths(month, -1))} className="p-1"><ChevronLeft className="w-4 h-4 text-brand-wine" /></button>
+                <p className="text-sm font-medium text-brand-wine">{capitalize(format(month, "MMMM yyyy", { locale: ptBR }))}</p>
+                <button onClick={() => setMonth(addMonths(month, 1))} className="p-1"><ChevronRight className="w-4 h-4 text-brand-wine" /></button>
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {DAY_NAMES.map(d => <p key={d} className="text-center text-[10px] text-brand-gray py-1">{d}</p>)}
+                {calendarDays.map(d => {
+                  const past = isBefore(d, today);
+                  const tooFar = isBefore(maxDate, d);
+                  const inactive = inactiveDays.has(d.getDay());
+                  const otherMonth = !isSameMonth(d, month);
+                  const disabled = past || tooFar || inactive || otherMonth;
+                  const sel = date && isSameDay(date, d);
+                  const isToday = isSameDay(d, today);
+                  return (
+                    <button key={d.toISOString()} disabled={disabled} onClick={() => { setDate(d); setSlotIso(null); }}
+                      className={`aspect-square text-sm rounded-xl flex flex-col items-center justify-center transition-all
+                        ${disabled ? "text-brand-gray/30" : ""}
+                        ${sel ? "bg-brand-wine text-brand-cream font-medium shadow-md scale-105" : !disabled ? "bg-brand-rose-bg/50 border border-transparent text-brand-wine hover:bg-brand-rose-bg hover:border-brand-wine/20" : ""}`}>
+                      {format(d, "d")}
+                      {isToday && !sel && <span className="w-1 h-1 rounded-full bg-brand-coral" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </Section>
 
