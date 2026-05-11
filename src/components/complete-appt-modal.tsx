@@ -83,7 +83,7 @@ export function CompleteApptModal({ apptId, onClose }: { apptId: string; onClose
         ) : (
           <div className="space-y-4">
             <div className="bg-brand-rose-bg rounded-xl p-3">
-              <p className="text-sm font-medium text-brand-wine">{a.client.name}</p>
+              <p className="text-sm font-medium text-brand-wine">{a.client?.name ?? "Cliente removida"}</p>
               <p className="text-xs text-brand-gray mt-0.5">{a.service.name} · {capitalize(fmtDate(a.start_at, "EEE, d MMM"))} {fmtTime(a.start_at)}</p>
             </div>
 

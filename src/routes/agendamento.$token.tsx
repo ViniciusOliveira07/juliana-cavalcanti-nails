@@ -54,7 +54,7 @@ function Manage() {
             <>
               <div className="bg-brand-rose-bg rounded-2xl p-5">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs ${STATUS[a.status]?.cls}`}>{STATUS[a.status]?.label}</span>
-                <p className="text-base font-medium text-brand-wine mt-3">{a.client.name}</p>
+                <p className="text-base font-medium text-brand-wine mt-3">{a.client?.name ?? "Cliente removida"}</p>
                 <p className="text-sm text-brand-wine mt-1">{a.service.name} · {fmtDuration(a.service.duration_minutes)} · {fmtMoney(a.service.price)}</p>
                 <p className="text-xl font-serif italic text-brand-wine mt-4">{capitalize(fmtDate(a.start_at))}</p>
                 <p className="text-2xl font-serif italic text-brand-wine">às {fmtTime(a.start_at)}</p>

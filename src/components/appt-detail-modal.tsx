@@ -56,10 +56,10 @@ export function ApptDetailModal({ id, onClose }: { id: string; onClose: () => vo
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-brand-rose-bg flex items-center justify-center text-brand-wine font-medium">{initials(a.client.name)}</div>
+              <div className="w-12 h-12 rounded-full bg-brand-rose-bg flex items-center justify-center text-brand-wine font-medium">{initials(a.client?.name ?? "Cliente removida")}</div>
               <div>
-                <p className="font-medium text-brand-wine">{a.client.name}</p>
-                <p className="text-xs text-brand-gray">{a.client.phone}</p>
+                <p className="font-medium text-brand-wine">{a.client?.name ?? "Cliente removida"}</p>
+                <p className="text-xs text-brand-gray">{a.client?.phone ?? ""}</p>
               </div>
             </div>
             <div className="bg-brand-rose-bg rounded-xl p-4">
