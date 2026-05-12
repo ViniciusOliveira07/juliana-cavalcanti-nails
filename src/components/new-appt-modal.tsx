@@ -9,13 +9,18 @@ import { useClients, useServices, useProfile, useAvailableSlots, useWorkingHours
 import { fmtMoney, fmtDuration, fmtTime, fmtPhone } from "@/lib/format";
 import { addDays, format } from "date-fns";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { IMaskInput } from "react-imask";
+import { ProgressBar } from "@/components/progress-bar";
 
 export function NewApptModal({ initialDate, initialHour, onClose }: { initialDate: Date; initialHour?: number; onClose: () => void }) {
-  const qc = useQueryClient();
-  const { data: profile } = useProfile();
-  const { data: services = [] } = useServices(profile?.id, true);
-  const { data: clients = [] } = useClients();
+  const steps = ["Cliente", "Serviço", "Horário"];
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: services = [], isLoading: servicesLoading } = useServices(profile?.id, true);
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: hours = [], isLoading: hoursLoading } = useWorkingHours(profile?.id);
+  const { data: slots = [], isLoading: slotsLoading } = useAvailableSlots(profile, selectedService, date, hours);
+  const isAnyLoading = profileLoading || servicesLoading || clientsLoading || hoursLoading;
   const [step, setStep] = useState(1);
   const [clientQuery, setClientQuery] = useState("");
   const [clientId, setClientId] = useState<string | null>(null);
@@ -75,52 +80,61 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-[420px] bg-brand-cream rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-brand-wine font-serif italic text-xl">Novo agendamento — {step}/3</DialogTitle>
+      <DialogContent className="max-w-md p-6 bg-brand-cream rounded-2xl shadow-xl">
+        <DialogHeader className="space-y-4">
+          <ProgressBar step={step} steps={steps} />
+          <DialogTitle className="text-brand-wine font-serif italic text-xl">
+            Novo agendamento — {step}/{steps.length}
+          </DialogTitle>
         </DialogHeader>
 
         {step === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs text-brand-gray uppercase ml-1">Buscar cliente</Label>
-              <Input autoFocus={false} placeholder="Nome ou telefone..." value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} className="h-12 rounded-xl" />
+          isAnyLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner />
             </div>
-            
-            <div className="max-h-40 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-              {filteredClients.length === 0 && clientQuery && <p className="text-center text-xs text-brand-gray py-4">Nenhum resultado</p>}
-              {filteredClients.slice(0, 10).map(c => (
-                <button key={c.id} onClick={() => { setClientId(c.id); setStep(2); }}
-                  className="w-full text-left p-3 rounded-xl hover:bg-brand-rose-bg transition-colors border border-transparent hover:border-brand-wine/10">
-                  <p className="text-sm font-medium text-brand-wine">{c.name}</p>
-                  <p className="text-xs text-brand-gray">{fmtPhone(c.phone)}</p>
-                </button>
-              ))}
-            </div>
-
-            <div className="border-t border-brand-border pt-4 space-y-3">
-              <p className="text-xs text-brand-gray uppercase ml-1">Ou cadastrar nova cliente</p>
-              <div className="grid grid-cols-1 gap-2">
-                <Input id="modal-name" placeholder="Nome completo" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="h-11 rounded-xl" />
-                <IMaskInput
-                  id="modal-phone"
-                  mask="+55 (00) 00000-0000"
-                  placeholder="+55 (11) 99999-9999"
-                  value={newClient.phone}
-                  unmask={false}
-                  onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
-                  className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-wine disabled:cursor-not-allowed disabled:opacity-50"
-                />
+          ) : (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-brand-gray uppercase ml-1">Buscar cliente</Label>
+                <Input autoFocus={false} placeholder="Nome ou telefone..." value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} className="h-12 rounded-xl" />
               </div>
-              <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine text-brand-cream h-12 rounded-xl shadow-md">
-                Cadastrar e Continuar
-              </Button>
-            </div>
-          </div>
+              
+              <div className="max-h-40 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                {filteredClients.length === 0 && clientQuery && <p className="text-center text-xs text-brand-gray py-4">Nenhum resultado</p>}
+                {filteredClients.slice(0, 10).map(c => (
+                  <button key={c.id} onClick={() => { setClientId(c.id); setStep(2); }}
+                    className="w-full text-left p-3 rounded-xl hover:bg-brand-rose-bg transition-colors border border-transparent hover:border-brand-wine/10">
+                    <p className="text-sm font-medium text-brand-wine">{c.name}</p>
+                    <p className="text-xs text-brand-gray">{fmtPhone(c.phone)}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="border-t border-brand-border pt-4 space-y-3">
+                <p className="text-xs text-brand-gray uppercase ml-1">Ou cadastrar nova cliente</p>
+                <div className="grid grid-cols-1 gap-2">
+                  <Input id="modal-name" placeholder="Nome completo" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="h-11 rounded-xl" />
+                  <IMaskInput
+                    id="modal-phone"
+                    mask="+55 (00) 00000-0000"
+                    placeholder="+55 (11) 99999-9999"
+                    value={newClient.phone}
+                    unmask={false}
+                    onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
+                    className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-wine disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine hover:bg-brand-wine/90 text-brand-cream h-12 rounded-xl shadow-md transition-colors">
+                  Cadastrar e Continuar
+                </Button>
+              </div>
+            </motion.div>
+          )
         )}
 
         {step === 2 && (
-          <div className="space-y-2">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
             {services.map(s => (
               <button key={s.id} onClick={() => { setServiceId(s.id); setStep(3); }}
                 className={`w-full text-left p-3 rounded-xl border ${serviceId === s.id ? "border-brand-coral bg-brand-rose-bg" : "border-brand-border bg-brand-cream"}`}>
@@ -133,12 +147,12 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                 </div>
               </button>
             ))}
-            <Button variant="outline" onClick={() => setStep(1)} className="w-full">Voltar</Button>
-          </div>
+            <Button variant="outline" onClick={() => setStep(1)} className="w-full hover:bg-brand-rose-bg transition-colors">Voltar</Button>
+          </motion.div>
         )}
 
         {step === 3 && (
-          <div className="space-y-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <div className="flex gap-2">
               {Array.from({ length: 7 }, (_, i) => addDays(new Date(), i)).map(d => {
                 const sel = format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
@@ -163,8 +177,8 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
               })}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Voltar</Button>
-              <Button onClick={() => create.mutate()} disabled={!slotIso || create.isPending} className="flex-1 bg-brand-wine text-brand-cream">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 hover:bg-brand-rose-bg transition-colors">Voltar</Button>
+              <Button onClick={() => create.mutate()} disabled={!slotIso || create.isPending} className="flex-1 bg-brand-wine hover:bg-brand-wine/90 text-brand-cream transition-colors">
                 {create.isPending ? "Salvando..." : "Confirmar"}
               </Button>
             </div>

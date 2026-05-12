@@ -49,6 +49,9 @@ export const useServices = (profileId?: string, onlyActive = false) =>
       if (error) throw error;
       return data ?? [];
     },
+    placeholderData: [],
+    staleTime: 60_000,
+    enabled: !!profileId,
   });
 
 export const useClients = () =>
@@ -59,6 +62,9 @@ export const useClients = () =>
       if (error) throw error;
       return data ?? [];
     },
+    placeholderData: [],
+    staleTime: 60_000,
+    enabled: true,
   });
 
 export const useWorkingHours = (profileId?: string) =>
