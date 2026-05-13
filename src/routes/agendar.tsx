@@ -156,6 +156,7 @@ function Agendar() {
         <StepOne
           services={services}
           servicesLoading={servicesLoading || !profile}
+          hoursLoading={hoursLoading || !profile}
           serviceId={serviceId}
           setServiceId={setServiceId}
           todayHoursStr={todayHoursStr}
@@ -199,50 +200,37 @@ function Agendar() {
 /* ──────────────────────────── Stepper ──────────────────────────── */
 
 function Stepper({ current, onJump }: { current: 1 | 2 | 3; onJump: (n: 1 | 2 | 3) => void }) {
+  const pct = (current / 3) * 100;
   return (
-    <div className="mt-3 mb-5">
-      <div className="flex items-center justify-between gap-2">
-        {[1, 2, 3].map((n, i) => {
-          const isDone = current > n;
-          const isActive = current === n;
-          const clickable = n < current;
-          return (
-            <div key={n} className="flex items-center flex-1 last:flex-none">
-              <button
-                type="button"
-                disabled={!clickable}
-                onClick={() => clickable && onJump(n as 1 | 2 | 3)}
-                className={`flex items-center gap-2 ${clickable ? "cursor-pointer" : "cursor-default"}`}
-              >
-                <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all
-                    ${isActive ? "bg-brand-wine text-brand-cream shadow-md scale-110" : ""}
-                    ${isDone ? "bg-brand-wine/90 text-brand-cream" : ""}
-                    ${!isActive && !isDone ? "bg-white border border-brand-rose-bg text-brand-wine/50" : ""}`}
-                >
-                  {isDone ? <Check className="w-3.5 h-3.5" /> : n}
-                </span>
-                <span className={`text-xs hidden sm:inline ${isActive ? "text-brand-wine font-medium" : "text-brand-gray"}`}>
-                  {STEP_LABELS[n - 1]}
-                </span>
-              </button>
-              {i < 2 && (
-                <div className={`flex-1 h-0.5 mx-2 rounded-full transition-colors ${current > n ? "bg-brand-wine/70" : "bg-brand-rose-bg"}`} />
-              )}
-            </div>
-          );
-        })}
+    <div className="mt-2 mb-5">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium text-brand-wine">
+          Etapa <span className="font-semibold">{current}</span> de 3
+        </p>
+        <p className="text-xs text-brand-gray">{STEP_LABELS[current - 1]}</p>
       </div>
-      <p className="text-center text-xs text-brand-gray mt-2 sm:hidden">
-        Etapa {current} de 3 · {STEP_LABELS[current - 1]}
-      </p>
+      <div className="h-1.5 w-full rounded-full bg-brand-rose-bg overflow-hidden">
+        <div
+          className="h-full bg-brand-wine rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {current > 1 && (
+        <button
+          type="button"
+          onClick={() => onJump((current - 1) as 1 | 2 | 3)}
+          className="text-[11px] text-brand-wine/60 hover:text-brand-wine mt-2 inline-flex items-center gap-1"
+        >
+          <ChevronLeft className="w-3 h-3" /> Voltar para {STEP_LABELS[current - 2]}
+        </button>
+      )}
     </div>
   );
 }
 
 /* ──────────────────────────── Step 1 ──────────────────────────── */
 
-function StepOne({ services, servicesLoading, serviceId, setServiceId, todayHoursStr, hoursLines }: any) {
+function StepOne({ services, servicesLoading, hoursLoading, serviceId, setServiceId, todayHoursStr, hoursLines }: any) {
   return (
     <>
       <div className="text-center mb-5">
@@ -250,18 +238,22 @@ function StepOne({ services, servicesLoading, serviceId, setServiceId, todayHour
         <p className="text-sm text-brand-gray mt-1">Veja nossos horários e escolha o serviço</p>
       </div>
 
-      <details className="bg-white rounded-2xl p-4 group border border-brand-rose-bg shadow-sm [&_summary::-webkit-details-marker]:hidden">
-        <summary className="text-sm font-medium text-brand-wine flex items-center justify-between cursor-pointer list-none focus:outline-none">
-          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-brand-wine/70" /> <span className="truncate">{todayHoursStr}</span></div>
-          <div className="flex items-center gap-1 text-[11px] text-brand-wine/60 font-normal ml-2">
-            <span>Ver todos</span>
-            <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
-          </div>
-        </summary>
-        <ul className="text-sm text-brand-wine/70 mt-3 space-y-1.5 pt-3 border-t border-brand-rose-bg">
-          {hoursLines.map((l: string, i: number) => <li key={i}>{l}</li>)}
-        </ul>
-      </details>
+      {hoursLoading ? (
+        <div className="h-[52px] bg-white/60 animate-pulse rounded-2xl border border-brand-rose-bg" />
+      ) : (
+        <details className="bg-white rounded-2xl p-4 group border border-brand-rose-bg shadow-sm [&_summary::-webkit-details-marker]:hidden">
+          <summary className="text-sm font-medium text-brand-wine flex items-center justify-between cursor-pointer list-none focus:outline-none">
+            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-brand-wine/70" /> <span className="truncate">{todayHoursStr}</span></div>
+            <div className="flex items-center gap-1 text-[11px] text-brand-wine/60 font-normal ml-2">
+              <span>Ver todos</span>
+              <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
+            </div>
+          </summary>
+          <ul className="text-sm text-brand-wine/70 mt-3 space-y-1.5 pt-3 border-t border-brand-rose-bg">
+            {hoursLines.map((l: string, i: number) => <li key={i}>{l}</li>)}
+          </ul>
+        </details>
+      )}
 
       <Section label="Escolha o serviço">
         <div className="space-y-2 min-h-[260px]">
