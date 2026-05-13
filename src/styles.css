@@ -171,5 +171,7 @@
   }
 
   .font-script { font-family: var(--font-script); }
-  .font-serif { font-family: var(--font-serif); }
+  .font-serif { font-family: var(--font-serif); font-weight: 400; }
+  .font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
+}
 }
