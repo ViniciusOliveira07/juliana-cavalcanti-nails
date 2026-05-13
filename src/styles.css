@@ -1,7 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Italiana&family=Inter:wght@300;400;500;600;700&family=Pinyon+Script&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -65,14 +65,15 @@
 :root {
   --radius: 0.875rem;
 
-  /* Brand tokens (Juliana Cavalcanti Esmalteria) */
-  --brand-rose-bg: oklch(0.948 0.025 12);    /* #FCE7E9 */
-  --brand-coral: oklch(0.808 0.062 11);      /* #E8A5AE */
-  --brand-wine: oklch(0.39 0.072 10);        /* #7B3F4A */
-  --brand-cream: oklch(0.99 0.005 10);       /* #FFFBFC */
-  --brand-gray: oklch(0.6 0.015 20);         /* #8A7A7D */
-  --brand-gray-light: oklch(0.953 0.008 70); /* #F1EFE8 */
-  --brand-border: oklch(0.875 0.045 8);      /* #F4C0D1 */
+  /* Brand tokens — Juliana Cavalcanti Esmalteria (Romântico Atual) */
+  --brand-rose-bg: oklch(0.965 0.012 20);    /* rosa pó leitoso, fundo */
+  --brand-coral: oklch(0.78 0.06 20);        /* rosé dourado suave */
+  --brand-wine: oklch(0.32 0.08 12);         /* vinho profundo */
+  --brand-cream: oklch(0.992 0.004 60);      /* off-white quente */
+  --brand-gray: oklch(0.55 0.02 20);         /* taupe */
+  --brand-gray-light: oklch(0.945 0.008 40); /* areia clara */
+  --brand-border: oklch(0.9 0.025 18);       /* rosa pó borda */
+  --brand-gold: oklch(0.78 0.07 70);         /* dourado rosé acento */
 
   --background: var(--brand-rose-bg);
   --foreground: var(--brand-wine);
@@ -151,8 +152,10 @@
   --color-brand-gray: var(--brand-gray);
   --color-brand-gray-light: var(--brand-gray-light);
   --color-brand-border: var(--brand-border);
-  --font-script: 'Dancing Script', cursive;
-  --font-serif: 'Playfair Display', serif;
+  --color-brand-gold: var(--brand-gold);
+  --font-script: 'Pinyon Script', cursive;
+  --font-serif: 'Cormorant Garamond', 'Italiana', serif;
+  --font-display: 'Italiana', 'Cormorant Garamond', serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -168,5 +171,6 @@
   }
 
   .font-script { font-family: var(--font-script); }
-  .font-serif { font-family: var(--font-serif); }
+  .font-serif { font-family: var(--font-serif); font-weight: 400; }
+  .font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
 }
