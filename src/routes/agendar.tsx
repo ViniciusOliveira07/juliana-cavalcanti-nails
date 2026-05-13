@@ -230,7 +230,7 @@ function Stepper({ current, onJump }: { current: 1 | 2 | 3; onJump: (n: 1 | 2 | 
 
 /* ──────────────────────────── Step 1 ──────────────────────────── */
 
-function StepOne({ services, servicesLoading, serviceId, setServiceId, todayHoursStr, hoursLines }: any) {
+function StepOne({ services, servicesLoading, hoursLoading, serviceId, setServiceId, todayHoursStr, hoursLines }: any) {
   return (
     <>
       <div className="text-center mb-5">
@@ -238,18 +238,22 @@ function StepOne({ services, servicesLoading, serviceId, setServiceId, todayHour
         <p className="text-sm text-brand-gray mt-1">Veja nossos horários e escolha o serviço</p>
       </div>
 
-      <details className="bg-white rounded-2xl p-4 group border border-brand-rose-bg shadow-sm [&_summary::-webkit-details-marker]:hidden">
-        <summary className="text-sm font-medium text-brand-wine flex items-center justify-between cursor-pointer list-none focus:outline-none">
-          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-brand-wine/70" /> <span className="truncate">{todayHoursStr}</span></div>
-          <div className="flex items-center gap-1 text-[11px] text-brand-wine/60 font-normal ml-2">
-            <span>Ver todos</span>
-            <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
-          </div>
-        </summary>
-        <ul className="text-sm text-brand-wine/70 mt-3 space-y-1.5 pt-3 border-t border-brand-rose-bg">
-          {hoursLines.map((l: string, i: number) => <li key={i}>{l}</li>)}
-        </ul>
-      </details>
+      {hoursLoading ? (
+        <div className="h-[52px] bg-white/60 animate-pulse rounded-2xl border border-brand-rose-bg" />
+      ) : (
+        <details className="bg-white rounded-2xl p-4 group border border-brand-rose-bg shadow-sm [&_summary::-webkit-details-marker]:hidden">
+          <summary className="text-sm font-medium text-brand-wine flex items-center justify-between cursor-pointer list-none focus:outline-none">
+            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-brand-wine/70" /> <span className="truncate">{todayHoursStr}</span></div>
+            <div className="flex items-center gap-1 text-[11px] text-brand-wine/60 font-normal ml-2">
+              <span>Ver todos</span>
+              <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
+            </div>
+          </summary>
+          <ul className="text-sm text-brand-wine/70 mt-3 space-y-1.5 pt-3 border-t border-brand-rose-bg">
+            {hoursLines.map((l: string, i: number) => <li key={i}>{l}</li>)}
+          </ul>
+        </details>
+      )}
 
       <Section label="Escolha o serviço">
         <div className="space-y-2 min-h-[260px]">
