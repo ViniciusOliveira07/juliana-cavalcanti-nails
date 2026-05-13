@@ -156,6 +156,7 @@ function Agendar() {
         <StepOne
           services={services}
           servicesLoading={servicesLoading || !profile}
+          hoursLoading={hoursLoading || !profile}
           serviceId={serviceId}
           setServiceId={setServiceId}
           todayHoursStr={todayHoursStr}
