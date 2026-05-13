@@ -385,7 +385,7 @@ function StepThree({ selectedService, slotIso, form, setForm, showErrors, phoneO
         <div>
           <Label className="text-brand-wine/80 ml-1 mb-1 block">Qual o seu nome?</Label>
           <Input id="client-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className={`h-14 rounded-2xl bg-white focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4 ${showErrors && !form.name ? "border-red-500 bg-red-50" : "border-brand-rose-bg"}`} placeholder="Ex: Maria Silva" autoFocus />
+            className={`h-14 rounded-2xl bg-white focus:border-brand-wine focus:ring-brand-wine/20 shadow-sm text-base px-4 ${showErrors && !form.name ? "border-red-500 bg-red-50" : "border-brand-rose-bg"}`} placeholder="Ex: Maria Silva" />
         </div>
         <div>
           <Label className="text-brand-wine/80 ml-1 mb-1 block">Seu WhatsApp</Label>
