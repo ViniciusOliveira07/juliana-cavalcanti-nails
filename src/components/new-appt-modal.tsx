@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,49 +9,41 @@ import { useClients, useServices, useProfile, useAvailableSlots, useWorkingHours
 import { fmtMoney, fmtDuration, fmtTime, fmtPhone } from "@/lib/format";
 import { addDays, format } from "date-fns";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import { IMaskInput } from "react-imask";
 import { ProgressBar } from "@/components/progress-bar";
+import { Spinner } from "@/components/spinner";
 
-export function NewApptModal({ initialDate, initialHour, onClose }: { initialDate: Date; initialHour?: number; onClose: () => void }) {
+export function NewApptModal({ initialDate, onClose }: { initialDate: Date; initialHour?: number; onClose: () => void }) {
   const steps = ["Cliente", "Serviço", "Horário"];
+  const qc = useQueryClient();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: services = [], isLoading: servicesLoading } = useServices(profile?.id, true);
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const { data: hours = [], isLoading: hoursLoading } = useWorkingHours(profile?.id);
-  const { data: slots = [], isLoading: slotsLoading } = useAvailableSlots(profile, selectedService, date, hours);
-  const isAnyLoading = profileLoading || servicesLoading || clientsLoading || hoursLoading;
+
   const [step, setStep] = useState(1);
   const [clientQuery, setClientQuery] = useState("");
   const [clientId, setClientId] = useState<string | null>(null);
   const [newClient, setNewClient] = useState({ name: "", phone: "" });
   const [serviceId, setServiceId] = useState<string | null>(null);
-  const [date, setDate] = useState(initialDate);
+  const [date, setDate] = useState<Date>(initialDate);
   const [slotIso, setSlotIso] = useState<string | null>(null);
+
+  const selectedService = services.find(s => s.id === serviceId);
+  const { data: slots = [] } = useAvailableSlots(profile, selectedService, date, hours);
+  const isAnyLoading = profileLoading || servicesLoading || clientsLoading || hoursLoading;
 
   const filteredClients = useMemo(() =>
     clients.filter(c => c.name.toLowerCase().includes(clientQuery.toLowerCase()) || c.phone.includes(clientQuery)),
     [clients, clientQuery]);
-
-  const { data: hours = [] } = useWorkingHours(profile?.id);
-  const selectedService = services.find(s => s.id === serviceId);
-  const { data: slots = [] } = useAvailableSlots(profile, selectedService, date, hours);
 
   const create = useMutation({
     mutationFn: async () => {
       if (!profile || !serviceId || !slotIso) throw new Error("Dados incompletos");
       let cid = clientId;
       if (!cid) {
-        if (!newClient.name) {
-          toast.error("Por favor, digite o nome");
-          document.getElementById("modal-name")?.focus();
-          return;
-        }
-        if (!newClient.phone) {
-          toast.error("Por favor, digite o WhatsApp");
-          document.getElementById("modal-phone")?.focus();
-          return;
-        }
+        if (!newClient.name) { toast.error("Por favor, digite o nome"); return; }
+        if (!newClient.phone) { toast.error("Por favor, digite o WhatsApp"); return; }
         const { data, error } = await supabase.from("clients").upsert(
           { profile_id: profile.id, name: newClient.name, phone: newClient.phone },
           { onConflict: "profile_id,phone" }
@@ -90,17 +82,14 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
 
         {step === 1 && (
           isAnyLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner />
-            </div>
+            <div className="flex items-center justify-center py-8"><Spinner /></div>
           ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs text-brand-gray uppercase ml-1">Buscar cliente</Label>
-                <Input autoFocus={false} placeholder="Nome ou telefone..." value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} className="h-12 rounded-xl" />
+                <Input placeholder="Nome ou telefone..." value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} className="h-12 rounded-xl" />
               </div>
-              
-              <div className="max-h-40 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+              <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
                 {filteredClients.length === 0 && clientQuery && <p className="text-center text-xs text-brand-gray py-4">Nenhum resultado</p>}
                 {filteredClients.slice(0, 10).map(c => (
                   <button key={c.id} onClick={() => { setClientId(c.id); setStep(2); }}
@@ -110,7 +99,6 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                   </button>
                 ))}
               </div>
-
               <div className="border-t border-brand-border pt-4 space-y-3">
                 <p className="text-xs text-brand-gray uppercase ml-1">Ou cadastrar nova cliente</p>
                 <div className="grid grid-cols-1 gap-2">
@@ -122,19 +110,19 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                     value={newClient.phone}
                     unmask={false}
                     onAccept={(value) => setNewClient({ ...newClient, phone: value as string })}
-                    className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-wine disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-gray/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-wine"
                   />
                 </div>
-                <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine hover:bg-brand-wine/90 text-brand-cream h-12 rounded-xl shadow-md transition-colors">
+                <Button onClick={() => { setClientId(null); setStep(2); }} disabled={!newClient.name || !newClient.phone} className="w-full bg-brand-wine hover:bg-brand-wine/90 text-brand-cream h-12 rounded-xl shadow-md">
                   Cadastrar e Continuar
                 </Button>
               </div>
-            </motion.div>
+            </div>
           )
         )}
 
         {step === 2 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+          <div className="space-y-2">
             {services.map(s => (
               <button key={s.id} onClick={() => { setServiceId(s.id); setStep(3); }}
                 className={`w-full text-left p-3 rounded-xl border ${serviceId === s.id ? "border-brand-coral bg-brand-rose-bg" : "border-brand-border bg-brand-cream"}`}>
@@ -147,12 +135,12 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                 </div>
               </button>
             ))}
-            <Button variant="outline" onClick={() => setStep(1)} className="w-full hover:bg-brand-rose-bg transition-colors">Voltar</Button>
-          </motion.div>
+            <Button variant="outline" onClick={() => setStep(1)} className="w-full hover:bg-brand-rose-bg">Voltar</Button>
+          </div>
         )}
 
         {step === 3 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+          <div className="space-y-3">
             <div className="flex gap-2">
               {Array.from({ length: 7 }, (_, i) => addDays(new Date(), i)).map(d => {
                 const sel = format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
@@ -177,12 +165,12 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
               })}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 hover:bg-brand-rose-bg transition-colors">Voltar</Button>
-              <Button onClick={() => create.mutate()} disabled={!slotIso || create.isPending} className="flex-1 bg-brand-wine hover:bg-brand-wine/90 text-brand-cream transition-colors">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 hover:bg-brand-rose-bg">Voltar</Button>
+              <Button onClick={() => create.mutate()} disabled={!slotIso || create.isPending} className="flex-1 bg-brand-wine hover:bg-brand-wine/90 text-brand-cream">
                 {create.isPending ? "Salvando..." : "Confirmar"}
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
