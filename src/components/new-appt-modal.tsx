@@ -182,7 +182,7 @@ export function NewApptModal({ initialDate, initialHour, onClose }: { initialDat
                 {create.isPending ? "Salvando..." : "Confirmar"}
               </Button>
             </div>
-          </div>
+          </motion.div>
         )}
       </DialogContent>
     </Dialog>
